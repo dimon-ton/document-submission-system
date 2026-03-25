@@ -29,7 +29,8 @@ function doGet() {
   ensureSheets();   // create sheets if missing
   ensureHeaders();  // insert header row if missing
   return HtmlService.createHtmlOutputFromFile('Index')
-    .setTitle('ระบบส่งงานออนไลน์ ปีการศึกษา 2568')
+    .setTitle('ระบบส่งงานออนไลน์โรงเรียนบ้านโพนแท่น ปีการศึกษา 2568')
+    .setFaviconUrl('https://raw.githubusercontent.com/dimon-ton/document-submission-system/master/school-logo.png')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setSandboxMode(HtmlService.SandboxMode.IFRAME);
@@ -334,8 +335,8 @@ function submitSAR(data) {
 
 /**
  * Handles รายงานโครงการประจำปี 2568 form submission.
- * data = { name, wordFiles: [{name,base64,mimeType}], pdfFile: {name,base64,mimeType}, note, isNewName }
- * Sheet columns: A=Timestamp, B=Name, C=WordNames, D=WordURLs, E=PDFName, F=PDFURL, G=Note
+ * data = { name, wordFiles: [{name,base64,mimeType}], pdfFiles: [{name,base64,mimeType}], note, isNewName }
+ * Sheet columns: A=Timestamp, B=Name, C=WordNames, D=WordURLs, E=PDFNames, F=PDFURLs, G=Note
  */
 function submitProjectReport(data) {
   try {
@@ -352,12 +353,14 @@ function submitProjectReport(data) {
       wordUrls.push(result.url);
     }
 
-    let pdfName = '';
-    let pdfUrl  = '';
-    if (data.pdfFile && data.pdfFile.base64) {
-      const result = saveFileToDrive(FOLDER_PROJECT, data.pdfFile.name, data.pdfFile.base64, data.pdfFile.mimeType);
-      pdfName = result.name;
-      pdfUrl  = result.url;
+    const pdfNames = [];
+    const pdfUrls  = [];
+    if (data.pdfFiles && data.pdfFiles.length) {
+      for (const f of data.pdfFiles) {
+        const result = saveFileToDrive(FOLDER_PROJECT, f.name, f.base64, f.mimeType);
+        pdfNames.push(result.name);
+        pdfUrls.push(result.url);
+      }
     }
 
     sheet.appendRow([
@@ -365,8 +368,8 @@ function submitProjectReport(data) {
       data.name,
       wordNames.join(', '),
       wordUrls.join(', '),
-      pdfName,
-      pdfUrl,
+      pdfNames.join(', '),
+      pdfUrls.join(', '),
       data.note || ''
     ]);
 
