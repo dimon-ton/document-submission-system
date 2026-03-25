@@ -318,6 +318,13 @@
       margin-left   : .4rem;
     }
     .status-count.done { background: #16a34a; }
+    .status-item.has-files { cursor: pointer; }
+    .status-item.has-files:hover { background: #fef9c3; border-radius: 6px; }
+    .status-chevron { font-size: .7rem; color: #92400e; margin-left: 4px; display: inline-block; transition: transform .2s; }
+    .status-item.expanded .status-chevron { transform: rotate(90deg); }
+    .status-files { display: none; padding: 2px 0 6px 2.6rem; }
+    .status-file-entry { font-size: .8rem; color: #374151; padding: 1px 0; }
+    .status-file-entry .file-ts { color: #9ca3af; margin-left: 6px; }
 
     .nav-tabs .nav-link        { font-size: .85rem; padding: .4rem .75rem; }
     .nav-tabs .nav-link.active { font-weight: 700; }
@@ -495,6 +502,10 @@
 
           <!-- Collapsible uploaded-files panel -->
           <div id="pp5-files-panel">
+            <div class="mb-2 px-1">
+              <input type="text" id="pp5-search" class="form-control form-control-sm"
+                     placeholder="ค้นหาชื่อ-นามสกุล หรือ ชื่อไฟล์..." oninput="filterPP5Table()">
+            </div>
             <div class="card">
               <div class="card-header">
                 <i class="bi bi-table me-1"></i>ไฟล์ที่อัพโหลดทั้งหมด (ทุกคน)
@@ -583,10 +594,46 @@
           <h5 class="modal-title" id="lbl-comp">
             <i class="bi bi-stars text-success me-2"></i>ส่งสมรรถนะ 5 ด้าน
           </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <button type="button" id="btn-view-comp"
+                    class="btn btn-sm btn-outline-success"
+                    onclick="toggleCompFiles()">
+              <i class="bi bi-eye me-1"></i>ดูไฟล์ที่อัพโหลด
+            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
         </div>
 
         <div class="modal-body p-4">
+
+          <!-- Collapsible uploaded-files panel -->
+          <div id="comp-files-panel" style="display:none;">
+            <div class="mb-2 px-1">
+              <input type="text" id="comp-search" class="form-control form-control-sm"
+                     placeholder="ค้นหาชื่อ-นามสกุล หรือ ชื่อไฟล์..." oninput="filterCompTable()">
+            </div>
+            <div class="card mb-3">
+              <div class="card-header">
+                <i class="bi bi-table me-1"></i>ไฟล์ที่อัพโหลดทั้งหมด (ทุกคน)
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive" style="max-height:260px; overflow-y:auto;">
+                  <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light sticky-top">
+                      <tr>
+                        <th class="text-center" style="width:50px;">ลำดับ</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>ชื่อไฟล์</th>
+                        <th>วันที่อัพโหลด</th>
+                      </tr>
+                    </thead>
+                    <tbody id="comp-files-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div><!-- /#comp-files-panel -->
+
           <form id="form-competency" onsubmit="return false;" novalidate>
 
             <div class="mb-3">
@@ -652,10 +699,46 @@
           <h5 class="modal-title" id="lbl-sar">
             <i class="bi bi-person-check me-2" style="color:#d97706;"></i>ส่ง SAR รายบุคคล
           </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <button type="button" id="btn-view-sar"
+                    class="btn btn-sm btn-outline-warning"
+                    onclick="toggleSarFiles()">
+              <i class="bi bi-eye me-1"></i>ดูไฟล์ที่อัพโหลด
+            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
         </div>
 
         <div class="modal-body p-4">
+
+          <!-- Collapsible uploaded-files panel -->
+          <div id="sar-files-panel" style="display:none;">
+            <div class="mb-2 px-1">
+              <input type="text" id="sar-search" class="form-control form-control-sm"
+                     placeholder="ค้นหาชื่อ-นามสกุล หรือ ชื่อไฟล์..." oninput="filterSarTable()">
+            </div>
+            <div class="card mb-3">
+              <div class="card-header">
+                <i class="bi bi-table me-1"></i>ไฟล์ที่อัพโหลดทั้งหมด (ทุกคน)
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive" style="max-height:260px; overflow-y:auto;">
+                  <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light sticky-top">
+                      <tr>
+                        <th class="text-center" style="width:50px;">ลำดับ</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>ชื่อไฟล์</th>
+                        <th>วันที่อัพโหลด</th>
+                      </tr>
+                    </thead>
+                    <tbody id="sar-files-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div><!-- /#sar-files-panel -->
+
           <form id="form-sar" onsubmit="return false;" novalidate>
 
             <div class="mb-3">
@@ -721,10 +804,46 @@
           <h5 class="modal-title" id="lbl-proj">
             <i class="bi bi-folder2-open text-danger me-2"></i>ส่งรายงานโครงการประจำปี 2568
           </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <button type="button" id="btn-view-proj"
+                    class="btn btn-sm btn-outline-danger"
+                    onclick="toggleProjFiles()">
+              <i class="bi bi-eye me-1"></i>ดูไฟล์ที่อัพโหลด
+            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
         </div>
 
         <div class="modal-body p-4">
+
+          <!-- Collapsible uploaded-files panel -->
+          <div id="proj-files-panel" style="display:none;">
+            <div class="mb-2 px-1">
+              <input type="text" id="proj-search" class="form-control form-control-sm"
+                     placeholder="ค้นหาชื่อ-นามสกุล หรือ ชื่อไฟล์..." oninput="filterProjTable()">
+            </div>
+            <div class="card mb-3">
+              <div class="card-header">
+                <i class="bi bi-table me-1"></i>ไฟล์ที่อัพโหลดทั้งหมด (ทุกคน)
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive" style="max-height:260px; overflow-y:auto;">
+                  <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light sticky-top">
+                      <tr>
+                        <th class="text-center" style="width:50px;">ลำดับ</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>ชื่อไฟล์</th>
+                        <th>วันที่อัพโหลด</th>
+                      </tr>
+                    </thead>
+                    <tbody id="proj-files-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div><!-- /#proj-files-panel -->
+
           <form id="form-project" onsubmit="return false;" novalidate>
 
             <div class="mb-3">
@@ -860,7 +979,14 @@
     // STATE
     // ============================================================
     let _namesList    = [];    // cached names from server
-    let _pp5FilesOpen = false; // toggle state for PP5 files panel
+    let _pp5FilesOpen  = false;
+    let _pp5Files      = [];
+    let _compFilesOpen = false;
+    let _compFiles     = [];
+    let _sarFilesOpen  = false;
+    let _sarFiles      = [];
+    let _projFilesOpen = false;
+    let _projFiles     = [];
 
     // ============================================================
     // INITIALISATION
@@ -1092,6 +1218,7 @@
       google.script.run
         .withSuccessHandler(function (files) {
           Swal.close();
+          _pp5Files = files;
           renderPP5FilesTable(files);
           document.getElementById('pp5-files-panel').style.display = 'block';
           document.getElementById('btn-view-pp5').innerHTML =
@@ -1108,6 +1235,7 @@
       document.getElementById('pp5-files-panel').style.display = 'none';
       document.getElementById('btn-view-pp5').innerHTML =
         '<i class="bi bi-eye me-1"></i>ดูไฟล์ที่อัพโหลด';
+      document.getElementById('pp5-search').value = '';
       _pp5FilesOpen = false;
     }
 
@@ -1137,6 +1265,174 @@
           '</td>';
         tbody.appendChild(tr);
       });
+    }
+
+    function filterPP5Table() {
+      var q = document.getElementById('pp5-search').value.toLowerCase().trim();
+      var filtered = q
+        ? _pp5Files.filter(function (f) { return f.name.toLowerCase().includes(q) || f.fileName.toLowerCase().includes(q); })
+        : _pp5Files;
+      renderPP5FilesTable(filtered);
+    }
+
+    // ============================================================
+    // UPLOADED FILES PANELS : สมรรถนะ / SAR / โครงการ
+    // ============================================================
+
+    // ── COMPETENCY ──────────────────────────────────────────────
+    function toggleCompFiles() {
+      _compFilesOpen ? resetCompFilesPanel() : openCompFilesPanel();
+    }
+    function openCompFilesPanel() {
+      showLoading('กำลังโหลดข้อมูล...');
+      google.script.run
+        .withSuccessHandler(function (files) {
+          Swal.close();
+          _compFiles = files;
+          renderCompFilesTable(files);
+          document.getElementById('comp-files-panel').style.display = 'block';
+          document.getElementById('btn-view-comp').innerHTML =
+            '<i class="bi bi-eye-slash me-1"></i>ซ่อนไฟล์';
+          _compFilesOpen = true;
+        })
+        .withFailureHandler(function (err) { showError((err && err.message) || 'ไม่สามารถโหลดข้อมูลได้'); })
+        .getUploadedFiles('competency');
+    }
+    function resetCompFilesPanel() {
+      document.getElementById('comp-files-panel').style.display = 'none';
+      document.getElementById('btn-view-comp').innerHTML =
+        '<i class="bi bi-eye me-1"></i>ดูไฟล์ที่อัพโหลด';
+      document.getElementById('comp-search').value = '';
+      _compFilesOpen = false;
+    }
+    function renderCompFilesTable(files) {
+      const tbody = document.getElementById('comp-files-tbody');
+      tbody.innerHTML = '';
+      if (!files || files.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">' +
+          '<i class="bi bi-inbox me-1"></i>ยังไม่มีไฟล์ที่อัพโหลด</td></tr>';
+        return;
+      }
+      files.forEach(function (f, i) {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td class="text-center">' + (i + 1) + '</td>' +
+          '<td>' + esc(f.name) + '</td>' +
+          '<td><small>' + esc(f.fileName) + '</small></td>' +
+          '<td><small>' + esc(f.timestamp) + '</small></td>';
+        tbody.appendChild(tr);
+      });
+    }
+    function filterCompTable() {
+      var q = document.getElementById('comp-search').value.toLowerCase().trim();
+      var filtered = q
+        ? _compFiles.filter(function (f) { return f.name.toLowerCase().includes(q) || f.fileName.toLowerCase().includes(q); })
+        : _compFiles;
+      renderCompFilesTable(filtered);
+    }
+
+    // ── SAR ─────────────────────────────────────────────────────
+    function toggleSarFiles() {
+      _sarFilesOpen ? resetSarFilesPanel() : openSarFilesPanel();
+    }
+    function openSarFilesPanel() {
+      showLoading('กำลังโหลดข้อมูล...');
+      google.script.run
+        .withSuccessHandler(function (files) {
+          Swal.close();
+          _sarFiles = files;
+          renderSarFilesTable(files);
+          document.getElementById('sar-files-panel').style.display = 'block';
+          document.getElementById('btn-view-sar').innerHTML =
+            '<i class="bi bi-eye-slash me-1"></i>ซ่อนไฟล์';
+          _sarFilesOpen = true;
+        })
+        .withFailureHandler(function (err) { showError((err && err.message) || 'ไม่สามารถโหลดข้อมูลได้'); })
+        .getUploadedFiles('sar');
+    }
+    function resetSarFilesPanel() {
+      document.getElementById('sar-files-panel').style.display = 'none';
+      document.getElementById('btn-view-sar').innerHTML =
+        '<i class="bi bi-eye me-1"></i>ดูไฟล์ที่อัพโหลด';
+      document.getElementById('sar-search').value = '';
+      _sarFilesOpen = false;
+    }
+    function renderSarFilesTable(files) {
+      const tbody = document.getElementById('sar-files-tbody');
+      tbody.innerHTML = '';
+      if (!files || files.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">' +
+          '<i class="bi bi-inbox me-1"></i>ยังไม่มีไฟล์ที่อัพโหลด</td></tr>';
+        return;
+      }
+      files.forEach(function (f, i) {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td class="text-center">' + (i + 1) + '</td>' +
+          '<td>' + esc(f.name) + '</td>' +
+          '<td><small>' + esc(f.fileName) + '</small></td>' +
+          '<td><small>' + esc(f.timestamp) + '</small></td>';
+        tbody.appendChild(tr);
+      });
+    }
+    function filterSarTable() {
+      var q = document.getElementById('sar-search').value.toLowerCase().trim();
+      var filtered = q
+        ? _sarFiles.filter(function (f) { return f.name.toLowerCase().includes(q) || f.fileName.toLowerCase().includes(q); })
+        : _sarFiles;
+      renderSarFilesTable(filtered);
+    }
+
+    // ── PROJECT ──────────────────────────────────────────────────
+    function toggleProjFiles() {
+      _projFilesOpen ? resetProjFilesPanel() : openProjFilesPanel();
+    }
+    function openProjFilesPanel() {
+      showLoading('กำลังโหลดข้อมูล...');
+      google.script.run
+        .withSuccessHandler(function (files) {
+          Swal.close();
+          _projFiles = files;
+          renderProjFilesTable(files);
+          document.getElementById('proj-files-panel').style.display = 'block';
+          document.getElementById('btn-view-proj').innerHTML =
+            '<i class="bi bi-eye-slash me-1"></i>ซ่อนไฟล์';
+          _projFilesOpen = true;
+        })
+        .withFailureHandler(function (err) { showError((err && err.message) || 'ไม่สามารถโหลดข้อมูลได้'); })
+        .getUploadedFiles('project');
+    }
+    function resetProjFilesPanel() {
+      document.getElementById('proj-files-panel').style.display = 'none';
+      document.getElementById('btn-view-proj').innerHTML =
+        '<i class="bi bi-eye me-1"></i>ดูไฟล์ที่อัพโหลด';
+      document.getElementById('proj-search').value = '';
+      _projFilesOpen = false;
+    }
+    function renderProjFilesTable(files) {
+      const tbody = document.getElementById('proj-files-tbody');
+      tbody.innerHTML = '';
+      if (!files || files.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">' +
+          '<i class="bi bi-inbox me-1"></i>ยังไม่มีไฟล์ที่อัพโหลด</td></tr>';
+        return;
+      }
+      files.forEach(function (f, i) {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td class="text-center">' + (i + 1) + '</td>' +
+          '<td>' + esc(f.name) + '</td>' +
+          '<td><small>' + esc(f.fileName) + '</small></td>' +
+          '<td><small>' + esc(f.timestamp) + '</small></td>';
+        tbody.appendChild(tr);
+      });
+    }
+    function filterProjTable() {
+      var q = document.getElementById('proj-search').value.toLowerCase().trim();
+      var filtered = q
+        ? _projFiles.filter(function (f) { return f.name.toLowerCase().includes(q) || f.fileName.toLowerCase().includes(q); })
+        : _projFiles;
+      renderProjFilesTable(filtered);
     }
 
     // ============================================================
@@ -1317,7 +1613,7 @@
             '<i class="bi bi-exclamation-triangle text-danger me-1"></i>' +
             'ไม่สามารถโหลดข้อมูลได้: ' + ((err && err.message) || err);
         })
-        .getSubmissionStatus();
+        .getStatusWithFiles();
     }
 
     /**
@@ -1326,6 +1622,14 @@
      * @param {Array}  list         Array of { name, submitted } from server
      * @param {string} label        Category label for the heading
      */
+    function toggleStatusFiles(el) {
+      el.classList.toggle('expanded');
+      const panel = el.nextElementSibling;
+      if (panel && panel.classList.contains('status-files')) {
+        panel.style.display = el.classList.contains('expanded') ? 'block' : 'none';
+      }
+    }
+
     function renderStatusCards(containerId, list, label) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -1337,11 +1641,28 @@
       // Build the numbered list rows
       const rows = list.map(function (item, i) {
         const check = item.submitted ? '✅' : '⬜';
-        return '<div class="status-item">' +
-          '<span class="status-num">' + (i + 1) + '.</span>' +
-          '<span class="status-name">' + esc(item.name) + '</span>' +
-          '<span class="status-check">' + check + '</span>' +
-        '</div>';
+        const hasFiles = item.submitted && item.files && item.files.length > 0;
+
+        const itemDiv =
+          '<div class="status-item' + (hasFiles ? ' has-files' : '') + '"' +
+          (hasFiles ? ' onclick="toggleStatusFiles(this)"' : '') + '>' +
+            '<span class="status-num">' + (i + 1) + '.</span>' +
+            '<span class="status-name">' + esc(item.name) +
+              (hasFiles ? '<span class="status-chevron">▶</span>' : '') +
+            '</span>' +
+            '<span class="status-check">' + check + '</span>' +
+          '</div>';
+
+        const filesDiv = hasFiles
+          ? '<div class="status-files">' +
+              item.files.map(function(f) {
+                return '<div class="status-file-entry">📄 ' + esc(f.fileName) +
+                  '<span class="file-ts">' + esc(f.timestamp) + '</span></div>';
+              }).join('') +
+            '</div>'
+          : '';
+
+        return itemDiv + filesDiv;
       }).join('');
 
       const allDone = remain === 0;
@@ -1354,11 +1675,9 @@
             '<span class="' + countClass + '">' + done + '/' + total + '</span>' +
           '</div>' +
           rows +
-          '<div class="status-footer">' +
-            (allDone
-              ? '🎉 ส่งครบทุกคนแล้ว!'
-              : '⏳ ยังไม่ส่ง ' + remain + ' คน — กรุณาส่งด่วน!') +
-          '</div>' +
+          (allDone
+            ? '<div class="status-footer">🎉 ส่งครบทุกคนแล้ว!</div>'
+            : '') +
         '</div>';
     }
   </script>

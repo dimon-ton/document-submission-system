@@ -409,18 +409,19 @@ function getUploadedFiles(category) {
     const sheet = ss.getSheetByName(sheetName);
     if (!sheet) return [];
 
-    const rows = sheet.getDataRange().getValues();
+    const allRows = sheet.getDataRange().getValues();
+    // Sort data rows descending by timestamp (col A), keeping header out
+    const rows = allRows
+      .filter(r => r[0] instanceof Date)
+      .sort((a, b) => b[0].getTime() - a[0].getTime());
     const tz   = Session.getScriptTimeZone();
     const results = [];
 
     for (const row of rows) {
-      // Skip header row and empty rows — data rows always have a Date in column A
-      if (!(row[0] instanceof Date)) continue;
-
       const timestamp = Utilities.formatDate(row[0], tz, 'dd/MM/yyyy HH:mm');
       const personName = (row[1] || '').toString();
 
-      if (category === 'pp5' || category === 'competency') {
+      if (category === 'pp5') {
         // Columns: C=FileNames, D=FileURLs
         const fileNames = row[2] ? row[2].toString().split(', ') : [];
         const fileUrls  = row[3] ? row[3].toString().split(', ') : [];
@@ -437,19 +438,19 @@ function getUploadedFiles(category) {
         });
 
       } else {
-        // SAR / Project — Columns: C=WordNames, D=WordURLs, E=PDFName, F=PDFURL
-        const wordNames = row[2] ? row[2].toString().split(', ') : [];
-        const wordUrls  = row[3] ? row[3].toString().split(', ') : [];
+        // Competency / SAR / Project — Columns: C=FileNames, D=FileURLs, E=PDFName, F=PDFURL
+        const fileNames = row[2] ? row[2].toString().split(', ') : [];
+        const fileUrls  = row[3] ? row[3].toString().split(', ') : [];
         const pdfName   = (row[4] || '').toString().trim();
         const pdfUrl    = (row[5] || '').toString().trim();
 
-        wordNames.forEach((fn, i) => {
+        fileNames.forEach((fn, i) => {
           if (fn.trim()) {
             results.push({
               timestamp,
               name    : personName,
               fileName: fn.trim(),
-              fileUrl : (wordUrls[i] || '').trim()
+              fileUrl : (fileUrls[i] || '').trim()
             });
           }
         });
@@ -475,6 +476,49 @@ function getUploadedFiles(category) {
  * Returns submission status for all 4 categories cross-referenced against NameList.
  * @returns {{ pp5, competency, sar, project }} — each is an array of { name, submitted }
  */
+/**
+ * Like getSubmissionStatus() but bundles uploaded file info per person.
+ * Each item: { name, submitted, files: [{fileName, timestamp}] }
+ */
+function getStatusWithFiles() {
+  try {
+    const status = getSubmissionStatus();
+    const categories = ['pp5', 'competency', 'sar', 'project'];
+
+    // Build name→files map for each category
+    const fileMaps = {};
+    categories.forEach(function(cat) {
+      const map = {};
+      getUploadedFiles(cat).forEach(function(f) {
+        if (!map[f.name]) map[f.name] = [];
+        map[f.name].push({ fileName: f.fileName, timestamp: f.timestamp });
+      });
+      fileMaps[cat] = map;
+    });
+
+    // Merge files into each status item
+    function mergeFiles(list, cat) {
+      return list.map(function(item) {
+        return {
+          name      : item.name,
+          submitted : item.submitted,
+          files     : fileMaps[cat][item.name] || []
+        };
+      });
+    }
+
+    return {
+      pp5        : mergeFiles(status.pp5,        'pp5'),
+      competency : mergeFiles(status.competency, 'competency'),
+      sar        : mergeFiles(status.sar,        'sar'),
+      project    : mergeFiles(status.project,    'project')
+    };
+  } catch (e) {
+    Logger.log('getStatusWithFiles error: ' + e);
+    throw new Error('ไม่สามารถโหลดสถานะได้: ' + e.message);
+  }
+}
+
 function getSubmissionStatus() {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
