@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบส่งงานออนไลน์ ปีการศึกษา 2568</title>
+
+  <!-- Google Fonts: Sarabun (Thai) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- SweetAlert2 -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+  <style>
+    /* ==============================
+       ROOT & BODY
+    ============================== */
+    :root {
+      --primary      : #4361ee;
+      --primary-dark : #3451d1;
+      --purple       : #7209b7;
+      --green        : #16a34a;
+      --amber        : #d97706;
+      --red          : #dc2626;
+      --card-radius  : 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family  : 'Sarabun', 'Segoe UI', sans-serif;
+      background   : #f0f4ff;
+      min-height   : 100vh;
+      display      : flex;
+      flex-direction: column;
+    }
+
+    main { flex: 1; }
+
+    /* ==============================
+       HEADER
+    ============================== */
+    .app-header {
+      background    : linear-gradient(135deg, #1a3a6b 0%, #2d5fa6 60%, #4361ee 100%);
+      color         : #fff;
+      padding       : 1.5rem 0 1.6rem;
+      box-shadow    : 0 6px 24px rgba(26,58,107,.45);
+    }
+
+    /* Logo circle */
+    .school-logo {
+      width         : 90px;
+      height        : 90px;
+      border-radius : 50%;
+      border        : 3px solid rgba(255,255,255,.85);
+      object-fit    : cover;
+      background    : #fff;
+      flex-shrink   : 0;
+      box-shadow    : 0 4px 12px rgba(0,0,0,.25);
+    }
+
+    /* School name block */
+    .header-school-name {
+      font-size     : 1.55rem;
+      font-weight   : 700;
+      line-height   : 1.3;
+      letter-spacing: .02em;
+      text-shadow   : 0 1px 4px rgba(0,0,0,.3);
+    }
+    .header-district {
+      font-size     : 1rem;
+      font-weight   : 400;
+      opacity       : .88;
+      margin-top    : .15rem;
+    }
+    .header-subtitle {
+      display       : inline-flex;
+      align-items   : center;
+      gap           : .4rem;
+      font-size     : .88rem;
+      opacity       : .75;
+      margin-top    : .45rem;
+      background    : rgba(255,255,255,.12);
+      border-radius : 20px;
+      padding       : .2rem .85rem;
+    }
+
+    /* Divider line between school info and subtitle */
+    .header-divider {
+      border-top    : 1px solid rgba(255,255,255,.2);
+      margin        : .75rem 0 .55rem;
+    }
+
+    @media (max-width: 576px) {
+      .school-logo         { width: 68px; height: 68px; }
+      .header-school-name  { font-size: 1.15rem; }
+      .header-district     { font-size: .82rem; }
+    }
+
+    /* ==============================
+       SUBMISSION CARDS
+    ============================== */
+    .submission-card {
+      border        : none;
+      border-radius : var(--card-radius);
+      box-shadow    : 0 4px 18px rgba(0,0,0,.08);
+      transition    : transform .2s ease, box-shadow .2s ease;
+      height        : 100%;
+      background    : #fff;
+    }
+    .submission-card:hover {
+      transform  : translateY(-6px);
+      box-shadow : 0 14px 36px rgba(67,97,238,.18);
+    }
+
+    .card-icon-wrap {
+      width         : 72px;
+      height        : 72px;
+      border-radius : 50%;
+      display       : flex;
+      align-items   : center;
+      justify-content: center;
+      margin        : 0 auto 1rem;
+      font-size     : 2rem;
+    }
+
+    .card-title  { font-weight: 700; font-size: 1.05rem; }
+    .card-text   { font-size: .88rem; color: #6b7280; min-height: 2.5rem; }
+
+    /* Gradient submit button */
+    .btn-submit {
+      background    : linear-gradient(135deg, var(--primary), var(--purple));
+      color         : #fff;
+      border        : none;
+      border-radius : 25px;
+      padding       : .45rem 1.6rem;
+      font-weight   : 600;
+      font-size     : .9rem;
+      transition    : opacity .2s;
+    }
+    .btn-submit:hover { opacity: .88; color: #fff; }
+
+    /* ==============================
+       MODAL TWEAKS
+    ============================== */
+    .modal-content {
+      border        : none;
+      border-radius : 16px;
+      overflow      : hidden;
+    }
+    .modal-header {
+      background    : #f8f9ff;
+      border-bottom : 1px solid #e9ecef;
+      padding       : 1rem 1.25rem;
+    }
+    .modal-footer {
+      background    : #f8f9ff;
+      border-top    : 1px solid #e9ecef;
+    }
+    .modal-title  { font-weight: 700; font-size: 1.05rem; }
+
+    /* ==============================
+       FORM ELEMENTS
+    ============================== */
+    .form-label   { font-weight: 600; font-size: .9rem; margin-bottom: .3rem; }
+    .form-control { border-radius: 8px; font-family: 'Sarabun', sans-serif; }
+    .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 .2rem rgba(67,97,238,.2); }
+    .form-text    { font-size: .78rem; color: #6b7280; }
+
+    /* ==============================
+       CUSTOM AUTOCOMPLETE DROPDOWN
+    ============================== */
+    .ac-wrap { position: relative; }
+
+    .ac-dropdown {
+      position      : absolute;
+      top           : calc(100% + 3px);
+      left          : 0;
+      right         : 0;
+      background    : #fff;
+      border        : 1px solid #c7d2fe;
+      border-radius : 8px;
+      box-shadow    : 0 6px 20px rgba(67,97,238,.15);
+      z-index       : 1060;
+      max-height    : 220px;
+      overflow-y    : auto;
+      list-style    : none;
+      padding       : 4px 0;
+      margin        : 0;
+      display       : none;
+    }
+    .ac-dropdown.open { display: block; }
+
+    .ac-dropdown li {
+      padding       : 8px 14px;
+      cursor        : pointer;
+      font-size     : .9rem;
+      color         : #1e293b;
+      transition    : background .1s;
+    }
+    .ac-dropdown li:hover,
+    .ac-dropdown li.ac-active {
+      background    : #eff2ff;
+      color         : var(--primary);
+    }
+    .ac-dropdown li.ac-empty {
+      color         : #9ca3af;
+      cursor        : default;
+      font-style    : italic;
+    }
+    .ac-dropdown li.ac-empty:hover { background: transparent; color: #9ca3af; }
+
+    /* PDF hint box */
+    .pdf-hint {
+      background    : #eff6ff;
+      border        : 1px solid #bfdbfe;
+      border-radius : 8px;
+      padding       : .55rem .9rem;
+      font-size     : .82rem;
+      color         : #1d4ed8;
+    }
+
+    /* ==============================
+       FILE TABLE (PP5 view panel)
+    ============================== */
+    #pp5-files-panel {
+      display       : none;
+      margin-bottom : 1.25rem;
+    }
+    #pp5-files-panel .card {
+      border-radius : 10px;
+      overflow      : hidden;
+      border        : 1px solid #c7d2fe;
+    }
+    #pp5-files-panel .card-header {
+      background    : var(--primary);
+      color         : #fff;
+      font-weight   : 600;
+      font-size     : .88rem;
+      padding       : .5rem 1rem;
+    }
+    .table th { font-size: .82rem; font-weight: 600; white-space: nowrap; }
+    .table td { font-size: .83rem; vertical-align: middle; }
+
+    /* ==============================
+       FOOTER
+    ============================== */
+    .app-footer {
+      background    : #1e293b;
+      color         : #94a3b8;
+      text-align    : center;
+      padding       : .9rem 0;
+      font-size     : .82rem;
+      margin-top    : auto;
+    }
+
+    /* ==============================
+       RESPONSIVE ADJUSTMENTS
+    ============================== */
+    @media (max-width: 576px) {
+      .modal-dialog  { margin: .5rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ========================================================
+       HEADER
+  ======================================================== -->
+  <header class="app-header">
+    <div class="container">
+
+      <!-- School identity row -->
+      <div class="d-flex align-items-center gap-3">
+
+        <!-- Logo -->
+        <img
+          src="https://scontent.fbkk10-1.fna.fbcdn.net/v/t39.30808-6/304968890_561355489116491_8857655731127583642_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=53a332&_nc_ohc=YeXXanGY8DsQ7kNvwE2u-we&_nc_oc=Adr5adNnrYKlFjowx7sBlvnCQz4Ek9-WoVZyzoZMSKFdIjV9JSTYp2JRl4yB7iKR4wo&_nc_zt=23&_nc_ht=scontent.fbkk10-1.fna&_nc_gid=wd2MUYrwrskJO9o6PqWEuw&_nc_ss=7a32e&oh=00_Afx3CskjfpcUSwwJ8s74L6w3fvB9GsYA68i0HuU3Zk8JAQ&oe=69C8645E"
+          alt="ตราโรงเรียนบ้านโพนแท่น"
+          class="school-logo"
+          onerror="this.src='https://via.placeholder.com/90/ffffff/1a3a6b?text=ร.ร.'">
+
+        <!-- School names -->
+        <div>
+          <div class="header-school-name">โรงเรียนบ้านโพนแท่น</div>
+          <div class="header-district">
+            สำนักงานเขตพื้นที่การศึกษาประถมศึกษาร้อยเอ็ด เขต 2
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Divider -->
+      <div class="header-divider"></div>
+
+      <!-- System subtitle -->
+      <div class="text-center">
+        <span class="header-subtitle">
+          <i class="bi bi-cloud-upload-fill"></i>
+          ระบบส่งงานออนไลน์ ปีการศึกษา 2568 &nbsp;·&nbsp; โปรดเลือกประเภทงานที่ต้องการส่ง
+        </span>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================
+       MAIN — 4 CARDS
+  ======================================================== -->
+  <main class="container py-5">
+    <div class="row g-4 justify-content-center">
+
+      <!-- Card 1 : ป.พ.5 -->
+      <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+        <div class="card submission-card">
+          <div class="card-body text-center p-4">
+            <div class="card-icon-wrap" style="background:#ede9fe;">
+              <i class="bi bi-file-earmark-spreadsheet" style="color:#7c3aed;"></i>
+            </div>
+            <h5 class="card-title">ป.พ. 5</h5>
+            <p class="card-text">รายงานผลการเรียนของนักเรียน<br>(ไฟล์ Excel)</p>
+            <button class="btn btn-submit" data-bs-toggle="modal" data-bs-target="#modal-pp5">
+              <i class="bi bi-upload me-1"></i>ส่งงาน
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 : สมรรถนะ 5 ด้าน -->
+      <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+        <div class="card submission-card">
+          <div class="card-body text-center p-4">
+            <div class="card-icon-wrap" style="background:#dcfce7;">
+              <i class="bi bi-stars" style="color:#16a34a;"></i>
+            </div>
+            <h5 class="card-title">สมรรถนะ 5 ด้าน</h5>
+            <p class="card-text">รายงานสมรรถนะครู 5 ด้าน<br>&nbsp;</p>
+            <button class="btn btn-submit" data-bs-toggle="modal" data-bs-target="#modal-competency">
+              <i class="bi bi-upload me-1"></i>ส่งงาน
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 : SAR รายบุคคล -->
+      <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+        <div class="card submission-card">
+          <div class="card-body text-center p-4">
+            <div class="card-icon-wrap" style="background:#fef3c7;">
+              <i class="bi bi-person-check" style="color:#d97706;"></i>
+            </div>
+            <h5 class="card-title">SAR รายบุคคล</h5>
+            <p class="card-text">รายงานการประเมินตนเองรายบุคคล<br>&nbsp;</p>
+            <button class="btn btn-submit" data-bs-toggle="modal" data-bs-target="#modal-sar">
+              <i class="bi bi-upload me-1"></i>ส่งงาน
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4 : รายงานโครงการ -->
+      <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+        <div class="card submission-card">
+          <div class="card-body text-center p-4">
+            <div class="card-icon-wrap" style="background:#fee2e2;">
+              <i class="bi bi-folder2-open" style="color:#dc2626;"></i>
+            </div>
+            <h5 class="card-title">รายงานโครงการ<br>ประจำปี 2568</h5>
+            <p class="card-text">รายงานผลการดำเนินโครงการ<br>ประจำปีการศึกษา 2568</p>
+            <button class="btn btn-submit" data-bs-toggle="modal" data-bs-target="#modal-project">
+              <i class="bi bi-upload me-1"></i>ส่งงาน
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.row -->
+  </main>
+
+  <!-- ========================================================
+       MODAL 1 : ป.พ. 5
+  ======================================================== -->
+  <div class="modal fade" id="modal-pp5" tabindex="-1" aria-labelledby="lbl-pp5" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+
+        <!-- Header -->
+        <div class="modal-header">
+          <h5 class="modal-title" id="lbl-pp5">
+            <i class="bi bi-file-earmark-spreadsheet text-primary me-2"></i>ส่ง ป.พ. 5
+          </h5>
+          <!-- "ดูไฟล์ที่อัพโหลด" button in the header (right-aligned, left of close) -->
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <button type="button" id="btn-view-pp5"
+                    class="btn btn-sm btn-outline-info"
+                    onclick="togglePP5Files()">
+              <i class="bi bi-eye me-1"></i>ดูไฟล์ที่อัพโหลด
+            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body p-4">
+
+          <!-- Collapsible uploaded-files panel -->
+          <div id="pp5-files-panel">
+            <div class="card">
+              <div class="card-header">
+                <i class="bi bi-table me-1"></i>ไฟล์ที่อัพโหลดทั้งหมด (ทุกคน)
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive" style="max-height:260px; overflow-y:auto;">
+                  <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light sticky-top">
+                      <tr>
+                        <th class="text-center" style="width:50px;">ลำดับ</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>ชื่อไฟล์</th>
+                        <th>วันที่อัพโหลด</th>
+                        <th class="text-center">ดาวน์โหลด</th>
+                      </tr>
+                    </thead>
+                    <tbody id="pp5-files-tbody">
+                      <tr>
+                        <td colspan="5" class="text-center py-3 text-muted">
+                          <i class="bi bi-hourglass-split me-1"></i>กำลังโหลด...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div><!-- /#pp5-files-panel -->
+
+          <!-- Form -->
+          <form id="form-pp5" onsubmit="return false;" novalidate>
+
+            <!-- ชื่อ-นามสกุล -->
+            <div class="mb-3">
+              <label class="form-label" for="pp5-name">
+                ชื่อ-นามสกุล <span class="text-danger">*</span>
+              </label>
+              <div class="ac-wrap">
+                <input type="text" class="form-control" id="pp5-name"
+                       placeholder="พิมพ์หรือเลือกชื่อ" autocomplete="off">
+                <ul class="ac-dropdown" id="ac-pp5"></ul>
+              </div>
+              <div class="form-text">สามารถพิมพ์ชื่อใหม่ได้หากไม่มีในรายการ</div>
+            </div>
+
+            <!-- ไฟล์ Excel -->
+            <div class="mb-3">
+              <label class="form-label" for="pp5-files">
+                ไฟล์ Excel <span class="text-danger">*</span>
+              </label>
+              <input type="file" class="form-control" id="pp5-files"
+                     accept=".xlsx,.xls" multiple>
+              <div class="form-text">รองรับ .xlsx, .xls &nbsp;|&nbsp; เลือกหลายไฟล์ได้</div>
+            </div>
+
+            <!-- หมายเหตุ -->
+            <div class="mb-1">
+              <label class="form-label" for="pp5-note">หมายเหตุ</label>
+              <textarea class="form-control" id="pp5-note" rows="3"
+                        placeholder="หมายเหตุ (ไม่บังคับ)"></textarea>
+            </div>
+
+          </form>
+        </div><!-- /.modal-body -->
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-primary px-4" onclick="submitPP5()">
+            <i class="bi bi-send me-1"></i>ส่งงาน
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL 2 : สมรรถนะ 5 ด้าน
+  ======================================================== -->
+  <div class="modal fade" id="modal-competency" tabindex="-1" aria-labelledby="lbl-comp" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="lbl-comp">
+            <i class="bi bi-stars text-success me-2"></i>ส่งสมรรถนะ 5 ด้าน
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <form id="form-competency" onsubmit="return false;" novalidate>
+
+            <div class="mb-3">
+              <label class="form-label" for="comp-name">
+                ชื่อ-นามสกุล <span class="text-danger">*</span>
+              </label>
+              <div class="ac-wrap">
+                <input type="text" class="form-control" id="comp-name"
+                       placeholder="พิมพ์หรือเลือกชื่อ" autocomplete="off">
+                <ul class="ac-dropdown" id="ac-comp"></ul>
+              </div>
+              <div class="form-text">สามารถพิมพ์ชื่อใหม่ได้หากไม่มีในรายการ</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="comp-files">
+                ไฟล์สมรรถนะ 5 ด้าน <span class="text-danger">*</span>
+              </label>
+              <input type="file" class="form-control" id="comp-files"
+                     accept=".xlsx,.xls,.pdf,.docx" multiple>
+              <div class="form-text">รองรับ .xlsx, .xls, .pdf, .docx &nbsp;|&nbsp; เลือกหลายไฟล์ได้</div>
+            </div>
+
+            <div class="mb-1">
+              <label class="form-label" for="comp-note">หมายเหตุ</label>
+              <textarea class="form-control" id="comp-note" rows="3"
+                        placeholder="หมายเหตุ (ไม่บังคับ)"></textarea>
+            </div>
+
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-success px-4" onclick="submitCompetency()">
+            <i class="bi bi-send me-1"></i>ส่งงาน
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL 3 : SAR รายบุคคล
+  ======================================================== -->
+  <div class="modal fade" id="modal-sar" tabindex="-1" aria-labelledby="lbl-sar" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="lbl-sar">
+            <i class="bi bi-person-check me-2" style="color:#d97706;"></i>ส่ง SAR รายบุคคล
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <form id="form-sar" onsubmit="return false;" novalidate>
+
+            <div class="mb-3">
+              <label class="form-label" for="sar-name">
+                ชื่อ-นามสกุล <span class="text-danger">*</span>
+              </label>
+              <div class="ac-wrap">
+                <input type="text" class="form-control" id="sar-name"
+                       placeholder="พิมพ์หรือเลือกชื่อ" autocomplete="off">
+                <ul class="ac-dropdown" id="ac-sar"></ul>
+              </div>
+              <div class="form-text">สามารถพิมพ์ชื่อใหม่ได้หากไม่มีในรายการ</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="sar-word">
+                ไฟล์ Microsoft Word <span class="text-danger">*</span>
+              </label>
+              <input type="file" class="form-control" id="sar-word"
+                     accept=".docx,.doc" multiple>
+              <div class="form-text">รองรับ .docx, .doc &nbsp;|&nbsp; เลือกหลายไฟล์ได้</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="sar-pdf">
+                ไฟล์ PDF ฉบับสมบูรณ์ <span class="text-danger">*</span>
+              </label>
+              <input type="file" class="form-control" id="sar-pdf" accept=".pdf">
+              <div class="pdf-hint mt-2">
+                <i class="bi bi-info-circle me-1"></i>
+                อัพโหลดไฟล์ PDF ฉบับสมบูรณ์ที่มีหน้าปก ปกหลัง พร้อมปริ้น (1 ไฟล์เท่านั้น)
+              </div>
+            </div>
+
+            <div class="mb-1">
+              <label class="form-label" for="sar-note">หมายเหตุ</label>
+              <textarea class="form-control" id="sar-note" rows="3"
+                        placeholder="หมายเหตุ (ไม่บังคับ)"></textarea>
+            </div>
+
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn px-4 text-white" style="background:#d97706;" onclick="submitSAR()">
+            <i class="bi bi-send me-1"></i>ส่งงาน
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL 4 : รายงานโครงการประจำปี 2568
+  ======================================================== -->
+  <div class="modal fade" id="modal-project" tabindex="-1" aria-labelledby="lbl-proj" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="lbl-proj">
+            <i class="bi bi-folder2-open text-danger me-2"></i>ส่งรายงานโครงการประจำปี 2568
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <form id="form-project" onsubmit="return false;" novalidate>
+
+            <div class="mb-3">
+              <label class="form-label" for="proj-name">
+                ชื่อ-นามสกุล <span class="text-danger">*</span>
+              </label>
+              <div class="ac-wrap">
+                <input type="text" class="form-control" id="proj-name"
+                       placeholder="พิมพ์หรือเลือกชื่อ" autocomplete="off">
+                <ul class="ac-dropdown" id="ac-proj"></ul>
+              </div>
+              <div class="form-text">สามารถพิมพ์ชื่อใหม่ได้หากไม่มีในรายการ</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="proj-word">
+                ไฟล์ Microsoft Word <span class="text-danger">*</span>
+              </label>
+              <input type="file" class="form-control" id="proj-word"
+                     accept=".docx,.doc" multiple>
+              <div class="form-text">รองรับ .docx, .doc &nbsp;|&nbsp; เลือกหลายไฟล์ได้</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="proj-pdf">
+                ไฟล์ PDF ฉบับสมบูรณ์ <span class="text-danger">*</span>
+              </label>
+              <input type="file" class="form-control" id="proj-pdf" accept=".pdf">
+              <div class="pdf-hint mt-2">
+                <i class="bi bi-info-circle me-1"></i>
+                อัพโหลดไฟล์ PDF ฉบับสมบูรณ์ที่มีหน้าปก ปกหลัง พร้อมปริ้น (1 ไฟล์เท่านั้น)
+              </div>
+            </div>
+
+            <div class="mb-1">
+              <label class="form-label" for="proj-note">หมายเหตุ</label>
+              <textarea class="form-control" id="proj-note" rows="3"
+                        placeholder="หมายเหตุ (ไม่บังคับ)"></textarea>
+            </div>
+
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-danger px-4" onclick="submitProject()">
+            <i class="bi bi-send me-1"></i>ส่งงาน
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       FOOTER
+  ======================================================== -->
+  <footer class="app-footer">
+    <div class="container">ระบบส่งงานออนไลน์ &copy; 2568</div>
+  </footer>
+
+  <!-- ========================================================
+       SCRIPTS
+  ======================================================== -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+  <script>
+    // ============================================================
+    // STATE
+    // ============================================================
+    let _namesList    = [];    // cached names from server
+    let _pp5FilesOpen = false; // toggle state for PP5 files panel
+
+    // ============================================================
+    // INITIALISATION
+    // ============================================================
+    window.addEventListener('load', function () {
+      setupAllAutocompletes();
+      loadNames();
+      setupModalResets();
+    });
+
+    /** Reset every form and panel when its modal closes */
+    function setupModalResets() {
+      const modals = [
+        { id: 'modal-pp5',        formId: 'form-pp5'        },
+        { id: 'modal-competency',  formId: 'form-competency' },
+        { id: 'modal-sar',         formId: 'form-sar'        },
+        { id: 'modal-project',     formId: 'form-project'    }
+      ];
+
+      modals.forEach(function (m) {
+        const el = document.getElementById(m.id);
+        if (!el) return;
+        el.addEventListener('hidden.bs.modal', function () {
+          const f = document.getElementById(m.formId);
+          if (f) f.reset();
+          if (m.id === 'modal-pp5') resetPP5FilesPanel();
+        });
+      });
+    }
+
+    // ============================================================
+    // NAME LIST — load from server
+    // ============================================================
+    function loadNames() {
+      google.script.run
+        .withSuccessHandler(function (names) {
+          _namesList = names || [];
+        })
+        .withFailureHandler(function (err) {
+          console.warn('loadNames failed:', err);
+        })
+        .getNames();
+    }
+
+    /** Add a newly entered name to the local cache */
+    function addNameLocally(name) {
+      const trimmed = name.trim();
+      if (!_namesList.includes(trimmed)) {
+        _namesList.push(trimmed);
+      }
+    }
+
+    // ============================================================
+    // CUSTOM AUTOCOMPLETE
+    // ============================================================
+
+    /** Wire up all four name inputs once on page load */
+    function setupAllAutocompletes() {
+      [
+        ['pp5-name',  'ac-pp5' ],
+        ['comp-name', 'ac-comp'],
+        ['sar-name',  'ac-sar' ],
+        ['proj-name', 'ac-proj'],
+      ].forEach(function (pair) {
+        var input = document.getElementById(pair[0]);
+        var drop  = document.getElementById(pair[1]);
+        if (input && drop) setupAutocomplete(input, drop);
+      });
+    }
+
+    function setupAutocomplete(input, drop) {
+      var activeIdx = -1;
+
+      function filtered(q) {
+        if (!q) return _namesList.slice();
+        var lq = q.toLowerCase();
+        return _namesList.filter(function (n) {
+          return n.toLowerCase().includes(lq);
+        });
+      }
+
+      function render(items) {
+        drop.innerHTML = '';
+        activeIdx = -1;
+
+        if (!items.length) {
+          drop.classList.remove('open');
+          return;
+        }
+
+        items.forEach(function (name) {
+          var li = document.createElement('li');
+          li.textContent = name;
+          li.addEventListener('mousedown', function (e) {
+            e.preventDefault();          // keep input focused
+            input.value = name;
+            drop.classList.remove('open');
+          });
+          drop.appendChild(li);
+        });
+
+        drop.classList.add('open');
+      }
+
+      function highlight(idx) {
+        var items = drop.querySelectorAll('li');
+        items.forEach(function (li, i) {
+          li.classList.toggle('ac-active', i === idx);
+        });
+        if (items[idx]) items[idx].scrollIntoView({ block: 'nearest' });
+      }
+
+      input.addEventListener('focus', function () {
+        render(filtered(this.value.trim()));
+      });
+
+      input.addEventListener('input', function () {
+        render(filtered(this.value.trim()));
+      });
+
+      input.addEventListener('keydown', function (e) {
+        var items = drop.querySelectorAll('li');
+        if (!items.length) return;
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          activeIdx = Math.min(activeIdx + 1, items.length - 1);
+          highlight(activeIdx);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          activeIdx = Math.max(activeIdx - 1, 0);
+          highlight(activeIdx);
+        } else if (e.key === 'Enter' && activeIdx >= 0) {
+          e.preventDefault();
+          input.value = items[activeIdx].textContent;
+          drop.classList.remove('open');
+        } else if (e.key === 'Escape') {
+          drop.classList.remove('open');
+        }
+      });
+
+      input.addEventListener('blur', function () {
+        // Small delay so mousedown on list item fires first
+        setTimeout(function () { drop.classList.remove('open'); }, 150);
+      });
+    }
+
+    // ============================================================
+    // UTILITIES
+    // ============================================================
+
+    /** Convert a File object → { name, base64, mimeType } */
+    function readFileAsBase64(file) {
+      return new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+        reader.onload  = function (e) {
+          resolve({
+            name    : file.name,
+            base64  : e.target.result.split(',')[1],
+            mimeType: file.type || 'application/octet-stream'
+          });
+        };
+        reader.onerror = function (e) { reject(e); };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    /** Convert all files in a FileList → array of base64 objects */
+    function readAllFiles(fileList) {
+      return Promise.all(Array.from(fileList).map(readFileAsBase64));
+    }
+
+    /** True if the typed name is NOT in the cached list */
+    function isNewName(name) {
+      return !_namesList.some(function (n) {
+        return n.trim() === name.trim();
+      });
+    }
+
+    /** Safe HTML escaping to prevent XSS in the table */
+    function esc(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.appendChild(document.createTextNode(String(str)));
+      return d.innerHTML;
+    }
+
+    // SweetAlert2 helpers
+    function showLoading(msg) {
+      Swal.fire({
+        title             : msg || 'กำลังอัพโหลด...',
+        text              : 'กรุณารอสักครู่',
+        allowOutsideClick : false,
+        allowEscapeKey    : false,
+        showConfirmButton : false,
+        didOpen           : function () { Swal.showLoading(); }
+      });
+    }
+    function showSuccess(title, text) {
+      Swal.fire({ icon: 'success', title: title, text: text, confirmButtonColor: '#4361ee' });
+    }
+    function showError(msg) {
+      Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: msg, confirmButtonColor: '#4361ee' });
+    }
+    function showWarning(msg) {
+      Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: msg, confirmButtonColor: '#4361ee' });
+    }
+
+    /** Hide the Bootstrap modal by its element ID */
+    function hideModal(modalId) {
+      const el = document.getElementById(modalId);
+      if (el) bootstrap.Modal.getInstance(el)?.hide();
+    }
+
+    // ============================================================
+    // PP5 — VIEW FILES PANEL
+    // ============================================================
+    function togglePP5Files() {
+      if (_pp5FilesOpen) {
+        resetPP5FilesPanel();
+      } else {
+        openPP5FilesPanel();
+      }
+    }
+
+    function openPP5FilesPanel() {
+      showLoading('กำลังโหลดข้อมูล...');
+
+      google.script.run
+        .withSuccessHandler(function (files) {
+          Swal.close();
+          renderPP5FilesTable(files);
+          document.getElementById('pp5-files-panel').style.display = 'block';
+          document.getElementById('btn-view-pp5').innerHTML =
+            '<i class="bi bi-eye-slash me-1"></i>ซ่อนไฟล์';
+          _pp5FilesOpen = true;
+        })
+        .withFailureHandler(function (err) {
+          showError((err && err.message) || 'ไม่สามารถโหลดข้อมูลได้');
+        })
+        .getUploadedFiles('pp5');
+    }
+
+    function resetPP5FilesPanel() {
+      document.getElementById('pp5-files-panel').style.display = 'none';
+      document.getElementById('btn-view-pp5').innerHTML =
+        '<i class="bi bi-eye me-1"></i>ดูไฟล์ที่อัพโหลด';
+      _pp5FilesOpen = false;
+    }
+
+    function renderPP5FilesTable(files) {
+      const tbody = document.getElementById('pp5-files-tbody');
+      tbody.innerHTML = '';
+
+      if (!files || files.length === 0) {
+        tbody.innerHTML =
+          '<tr><td colspan="5" class="text-center py-3 text-muted">' +
+          '<i class="bi bi-inbox me-1"></i>ยังไม่มีไฟล์ที่อัพโหลด</td></tr>';
+        return;
+      }
+
+      files.forEach(function (f, i) {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td class="text-center">' + (i + 1) + '</td>' +
+          '<td>' + esc(f.name) + '</td>' +
+          '<td><small>' + esc(f.fileName) + '</small></td>' +
+          '<td><small>' + esc(f.timestamp) + '</small></td>' +
+          '<td class="text-center">' +
+            '<a href="' + esc(f.fileUrl) + '" target="_blank" rel="noopener noreferrer" ' +
+               'class="btn btn-sm btn-primary">' +
+              '<i class="bi bi-download me-1"></i>ดาวน์โหลด' +
+            '</a>' +
+          '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ============================================================
+    // SUBMIT FORM 1 : ป.พ. 5
+    // ============================================================
+    async function submitPP5() {
+      const name  = document.getElementById('pp5-name').value.trim();
+      const files = document.getElementById('pp5-files').files;
+      const note  = document.getElementById('pp5-note').value.trim();
+
+      if (!name)           { showWarning('กรุณากรอกชื่อ-นามสกุล'); return; }
+      if (!files.length)   { showWarning('กรุณาเลือกไฟล์ Excel');  return; }
+
+      showLoading('กำลังอัพโหลด...');
+      try {
+        const fileData = await readAllFiles(files);
+        const newName  = isNewName(name);
+
+        google.script.run
+          .withSuccessHandler(function () {
+            if (newName) addNameLocally(name);
+            hideModal('modal-pp5');
+            showSuccess('ส่งงานสำเร็จ!', 'บันทึกข้อมูล ป.พ.5 เรียบร้อยแล้ว');
+          })
+          .withFailureHandler(function (err) {
+            showError((err && err.message) || 'ไม่สามารถส่งงานได้');
+          })
+          .submitPP5({ name: name, files: fileData, note: note, isNewName: newName });
+      } catch (e) {
+        showError('ไม่สามารถอ่านไฟล์ได้: ' + e.message);
+      }
+    }
+
+    // ============================================================
+    // SUBMIT FORM 2 : สมรรถนะ 5 ด้าน
+    // ============================================================
+    async function submitCompetency() {
+      const name  = document.getElementById('comp-name').value.trim();
+      const files = document.getElementById('comp-files').files;
+      const note  = document.getElementById('comp-note').value.trim();
+
+      if (!name)         { showWarning('กรุณากรอกชื่อ-นามสกุล');          return; }
+      if (!files.length) { showWarning('กรุณาเลือกไฟล์สมรรถนะ 5 ด้าน'); return; }
+
+      showLoading('กำลังอัพโหลด...');
+      try {
+        const fileData = await readAllFiles(files);
+        const newName  = isNewName(name);
+
+        google.script.run
+          .withSuccessHandler(function () {
+            if (newName) addNameLocally(name);
+            hideModal('modal-competency');
+            showSuccess('ส่งงานสำเร็จ!', 'บันทึกข้อมูลสมรรถนะ 5 ด้าน เรียบร้อยแล้ว');
+          })
+          .withFailureHandler(function (err) {
+            showError((err && err.message) || 'ไม่สามารถส่งงานได้');
+          })
+          .submitCompetency({ name: name, files: fileData, note: note, isNewName: newName });
+      } catch (e) {
+        showError('ไม่สามารถอ่านไฟล์ได้: ' + e.message);
+      }
+    }
+
+    // ============================================================
+    // SUBMIT FORM 3 : SAR รายบุคคล
+    // ============================================================
+    async function submitSAR() {
+      const name      = document.getElementById('sar-name').value.trim();
+      const wordFiles = document.getElementById('sar-word').files;
+      const pdfFiles  = document.getElementById('sar-pdf').files;
+      const note      = document.getElementById('sar-note').value.trim();
+
+      if (!name)           { showWarning('กรุณากรอกชื่อ-นามสกุล');             return; }
+      if (!wordFiles.length){ showWarning('กรุณาเลือกไฟล์ Microsoft Word');    return; }
+      if (!pdfFiles.length) { showWarning('กรุณาเลือกไฟล์ PDF ฉบับสมบูรณ์'); return; }
+
+      showLoading('กำลังอัพโหลด...');
+      try {
+        const wordData = await readAllFiles(wordFiles);
+        const pdfData  = (await readAllFiles(pdfFiles))[0]; // single file
+        const newName  = isNewName(name);
+
+        google.script.run
+          .withSuccessHandler(function () {
+            if (newName) addNameLocally(name);
+            hideModal('modal-sar');
+            showSuccess('ส่งงานสำเร็จ!', 'บันทึกข้อมูล SAR รายบุคคล เรียบร้อยแล้ว');
+          })
+          .withFailureHandler(function (err) {
+            showError((err && err.message) || 'ไม่สามารถส่งงานได้');
+          })
+          .submitSAR({
+            name      : name,
+            wordFiles : wordData,
+            pdfFile   : pdfData,
+            note      : note,
+            isNewName : newName
+          });
+      } catch (e) {
+        showError('ไม่สามารถอ่านไฟล์ได้: ' + e.message);
+      }
+    }
+
+    // ============================================================
+    // SUBMIT FORM 4 : รายงานโครงการประจำปี 2568
+    // ============================================================
+    async function submitProject() {
+      const name      = document.getElementById('proj-name').value.trim();
+      const wordFiles = document.getElementById('proj-word').files;
+      const pdfFiles  = document.getElementById('proj-pdf').files;
+      const note      = document.getElementById('proj-note').value.trim();
+
+      if (!name)           { showWarning('กรุณากรอกชื่อ-นามสกุล');             return; }
+      if (!wordFiles.length){ showWarning('กรุณาเลือกไฟล์ Microsoft Word');    return; }
+      if (!pdfFiles.length) { showWarning('กรุณาเลือกไฟล์ PDF ฉบับสมบูรณ์'); return; }
+
+      showLoading('กำลังอัพโหลด...');
+      try {
+        const wordData = await readAllFiles(wordFiles);
+        const pdfData  = (await readAllFiles(pdfFiles))[0]; // single file
+        const newName  = isNewName(name);
+
+        google.script.run
+          .withSuccessHandler(function () {
+            if (newName) addNameLocally(name);
+            hideModal('modal-project');
+            showSuccess('ส่งงานสำเร็จ!', 'บันทึกข้อมูลรายงานโครงการ เรียบร้อยแล้ว');
+          })
+          .withFailureHandler(function (err) {
+            showError((err && err.message) || 'ไม่สามารถส่งงานได้');
+          })
+          .submitProjectReport({
+            name      : name,
+            wordFiles : wordData,
+            pdfFile   : pdfData,
+            note      : note,
+            isNewName : newName
+          });
+      } catch (e) {
+        showError('ไม่สามารถอ่านไฟล์ได้: ' + e.message);
+      }
+    }
+  </script>
+
+</body>
+</html>

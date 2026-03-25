@@ -1,0 +1,14 @@
+# Clasp credentials (contains OAuth tokens — never commit)
+.clasprc.json
+
+# Resource IDs (contain private Google Drive/Sheets IDs)
+resource_ids.json
+
+# One-time setup scripts
+setup_resources.py
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
