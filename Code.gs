@@ -67,7 +67,7 @@ function ensureHeaders() {
   // Map: sheet name → expected header columns (Thai labels)
   const HEADERS = {};
   HEADERS[SHEET_PP5]        = ['Timestamp', 'ชื่อ-นามสกุล', 'ชื่อไฟล์', 'URL ไฟล์', 'หมายเหตุ'];
-  HEADERS[SHEET_COMPETENCY] = ['Timestamp', 'ชื่อ-นามสกุล', 'ชื่อไฟล์', 'URL ไฟล์', 'หมายเหตุ'];
+  HEADERS[SHEET_COMPETENCY] = ['Timestamp', 'ชื่อ-นามสกุล', 'ชื่อไฟล์', 'URL ไฟล์', 'ชื่อไฟล์ PDF', 'URL ไฟล์ PDF', 'หมายเหตุ'];
   HEADERS[SHEET_SAR]        = ['Timestamp', 'ชื่อ-นามสกุล', 'ชื่อไฟล์ Word', 'URL ไฟล์ Word', 'ชื่อไฟล์ PDF', 'URL ไฟล์ PDF', 'หมายเหตุ'];
   HEADERS[SHEET_PROJECT]    = ['Timestamp', 'ชื่อ-นามสกุล', 'ชื่อไฟล์ Word', 'URL ไฟล์ Word', 'ชื่อไฟล์ PDF', 'URL ไฟล์ PDF', 'หมายเหตุ'];
   HEADERS[SHEET_NAMELIST]   = ['ชื่อ-นามสกุล'];
@@ -76,22 +76,32 @@ function ensureHeaders() {
     const sheet = ss.getSheetByName(sheetName);
     if (!sheet) return;
 
-    const headers   = HEADERS[sheetName];
-    const firstCell = sheet.getRange(1, 1).getValue().toString().trim();
+    const headers    = HEADERS[sheetName];
+    const firstCell  = sheet.getRange(1, 1).getValue().toString().trim();
+    const currentLen = sheet.getLastColumn();
 
-    // Skip if header is already in place
-    if (firstCell === headers[0]) return;
+    // Header already correct — nothing to do
+    if (firstCell === headers[0] && currentLen >= headers.length) return;
 
-    // Insert a blank row at the top, then write header values
-    sheet.insertRowBefore(1);
-    const range = sheet.getRange(1, 1, 1, headers.length);
-    range.setValues([headers]);
+    function applyStyle(range) {
+      range.setFontWeight('bold');
+      range.setFontColor('#ffffff');
+      range.setBackground('#1a3a6b');
+      range.setHorizontalAlignment('center');
+    }
 
-    // Style: bold white text on dark blue background
-    range.setFontWeight('bold');
-    range.setFontColor('#ffffff');
-    range.setBackground('#1a3a6b');
-    range.setHorizontalAlignment('center');
+    if (firstCell === headers[0]) {
+      // Header row exists but needs more columns — update in-place
+      const range = sheet.getRange(1, 1, 1, headers.length);
+      range.setValues([headers]);
+      applyStyle(range);
+    } else {
+      // No header at all — insert a new row at the top
+      sheet.insertRowBefore(1);
+      const range = sheet.getRange(1, 1, 1, headers.length);
+      range.setValues([headers]);
+      applyStyle(range);
+    }
   });
 }
 
@@ -232,8 +242,8 @@ function submitPP5(data) {
 
 /**
  * Handles สมรรถนะ 5 ด้าน form submission.
- * data = { name, files: [{name, base64, mimeType}], note, isNewName }
- * Sheet columns: A=Timestamp, B=Name, C=FileNames, D=FileURLs, E=Note
+ * data = { name, wordFiles: [{name,base64,mimeType}], pdfFile: {name,base64,mimeType}, note, isNewName }
+ * Sheet columns: A=Timestamp, B=Name, C=FileNames, D=FileURLs, E=PDFName, F=PDFURL, G=Note
  */
 function submitCompetency(data) {
   try {
@@ -244,10 +254,18 @@ function submitCompetency(data) {
     const fileNames = [];
     const fileUrls  = [];
 
-    for (const f of data.files) {
+    for (const f of data.wordFiles) {
       const result = saveFileToDrive(FOLDER_COMPETENCY, f.name, f.base64, f.mimeType);
       fileNames.push(result.name);
       fileUrls.push(result.url);
+    }
+
+    let pdfName = '';
+    let pdfUrl  = '';
+    if (data.pdfFile && data.pdfFile.base64) {
+      const result = saveFileToDrive(FOLDER_COMPETENCY, data.pdfFile.name, data.pdfFile.base64, data.pdfFile.mimeType);
+      pdfName = result.name;
+      pdfUrl  = result.url;
     }
 
     sheet.appendRow([
@@ -255,6 +273,8 @@ function submitCompetency(data) {
       data.name,
       fileNames.join(', '),
       fileUrls.join(', '),
+      pdfName,
+      pdfUrl,
       data.note || ''
     ]);
 
@@ -441,5 +461,63 @@ function getUploadedFiles(category) {
   } catch (e) {
     Logger.log('getUploadedFiles error: ' + e);
     throw new Error('ไม่สามารถโหลดรายการไฟล์ได้: ' + e.message);
+  }
+}
+
+// ============================================================
+// SUBMISSION STATUS (for announcement popup)
+// ============================================================
+
+/**
+ * Returns submission status for all 4 categories cross-referenced against NameList.
+ * @returns {{ pp5, competency, sar, project }} — each is an array of { name, submitted }
+ */
+function getSubmissionStatus() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+    // Load all names from NameList (skip header)
+    const nameSheet = ss.getSheetByName(SHEET_NAMELIST);
+    const allNames  = nameSheet
+      ? nameSheet.getDataRange().getValues().slice(1)
+          .map(r => (r[0] || '').toString().trim()).filter(n => n)
+      : [];
+
+    // Helper: build a Set of names who have submitted in a given sheet
+    function submittedSet(sheetName) {
+      const sheet = ss.getSheetByName(sheetName);
+      const set   = new Set();
+      if (!sheet) return set;
+      sheet.getDataRange().getValues().forEach(function(row) {
+        if (row[0] instanceof Date && row[1]) {
+          set.add(row[1].toString().trim());
+        }
+      });
+      return set;
+    }
+
+    const sets = {
+      pp5        : submittedSet(SHEET_PP5),
+      competency : submittedSet(SHEET_COMPETENCY),
+      sar        : submittedSet(SHEET_SAR),
+      project    : submittedSet(SHEET_PROJECT)
+    };
+
+    // Map each name to { name, submitted } per category
+    function statusList(set) {
+      return allNames.map(function(name) {
+        return { name: name, submitted: set.has(name) };
+      });
+    }
+
+    return {
+      pp5        : statusList(sets.pp5),
+      competency : statusList(sets.competency),
+      sar        : statusList(sets.sar),
+      project    : statusList(sets.project)
+    };
+  } catch (e) {
+    Logger.log('getSubmissionStatus error: ' + e);
+    throw new Error('ไม่สามารถโหลดสถานะได้: ' + e.message);
   }
 }

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบส่งงานออนไลน์ ปีการศึกษา 2568</title>
+  <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/dimon-ton/document-submission-system/master/school-logo.jpg">
 
   <!-- Google Fonts: Sarabun (Thai) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -248,6 +249,75 @@
     .table td { font-size: .83rem; vertical-align: middle; }
 
     /* ==============================
+       ANNOUNCEMENT BUTTON
+    ============================== */
+    .btn-announce {
+      background    : linear-gradient(135deg, #f59e0b, #ef4444);
+      color         : #fff;
+      border        : none;
+      border-radius : 30px;
+      padding       : .55rem 1.8rem;
+      font-weight   : 700;
+      font-size     : .95rem;
+      box-shadow    : 0 4px 16px rgba(239,68,68,.35);
+      transition    : transform .15s, box-shadow .15s;
+      letter-spacing: .02em;
+    }
+    .btn-announce:hover {
+      transform     : translateY(-2px);
+      box-shadow    : 0 8px 22px rgba(239,68,68,.45);
+      color         : #fff;
+    }
+
+    /* ==============================
+       STATUS MODAL
+    ============================== */
+    .status-card {
+      background    : #fffbeb;
+      border        : 1px solid #fde68a;
+      border-radius : 12px;
+      padding       : 1.1rem 1.25rem 1rem;
+      font-size     : .9rem;
+      line-height   : 1.7;
+      white-space   : pre-line;
+    }
+    .status-intro {
+      color         : #92400e;
+      font-weight   : 600;
+      margin-bottom : .5rem;
+    }
+    .status-item {
+      display       : flex;
+      align-items   : baseline;
+      gap           : .4rem;
+      padding       : .1rem 0;
+    }
+    .status-num  { color: #6b7280; min-width: 1.8rem; text-align: right; flex-shrink: 0; }
+    .status-name { flex: 1; }
+    .status-check{ font-size: 1rem; }
+    .status-footer {
+      margin-top    : .75rem;
+      color         : #92400e;
+      font-size     : .83rem;
+      border-top    : 1px dashed #fcd34d;
+      padding-top   : .6rem;
+    }
+    .status-count {
+      display       : inline-block;
+      background    : #4361ee;
+      color         : #fff;
+      border-radius : 20px;
+      font-size     : .75rem;
+      padding       : .1rem .6rem;
+      font-weight   : 700;
+      margin-left   : .4rem;
+    }
+    .status-count.done { background: #16a34a; }
+
+    .nav-tabs .nav-link        { font-size: .85rem; padding: .4rem .75rem; }
+    .nav-tabs .nav-link.active { font-weight: 700; }
+
+    /* ==============================
        FOOTER
     ============================== */
     .app-footer {
@@ -281,7 +351,7 @@
 
         <!-- Logo -->
         <img
-          src="https://scontent.fbkk10-1.fna.fbcdn.net/v/t39.30808-6/304968890_561355489116491_8857655731127583642_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=53a332&_nc_ohc=YeXXanGY8DsQ7kNvwE2u-we&_nc_oc=Adr5adNnrYKlFjowx7sBlvnCQz4Ek9-WoVZyzoZMSKFdIjV9JSTYp2JRl4yB7iKR4wo&_nc_zt=23&_nc_ht=scontent.fbkk10-1.fna&_nc_gid=wd2MUYrwrskJO9o6PqWEuw&_nc_ss=7a32e&oh=00_Afx3CskjfpcUSwwJ8s74L6w3fvB9GsYA68i0HuU3Zk8JAQ&oe=69C8645E"
+          src="https://raw.githubusercontent.com/dimon-ton/document-submission-system/master/school-logo.jpg"
           alt="ตราโรงเรียนบ้านโพนแท่น"
           class="school-logo"
           onerror="this.src='https://via.placeholder.com/90/ffffff/1a3a6b?text=ร.ร.'">
@@ -314,6 +384,14 @@
        MAIN — 4 CARDS
   ======================================================== -->
   <main class="container py-5">
+
+    <!-- Announcement button -->
+    <div class="text-center mb-4">
+      <button class="btn btn-announce" onclick="showAnnouncement()">
+        <i class="bi bi-megaphone-fill me-2"></i>ดูสถานะการส่งงาน
+      </button>
+    </div>
+
     <div class="row g-4 justify-content-center">
 
       <!-- Card 1 : ป.พ.5 -->
@@ -340,7 +418,8 @@
               <i class="bi bi-stars" style="color:#16a34a;"></i>
             </div>
             <h5 class="card-title">สมรรถนะ 5 ด้าน</h5>
-            <p class="card-text">รายงานสมรรถนะครู 5 ด้าน<br>&nbsp;</p>
+            <p class="card-text">รายงานการประเมินสมรรถนะสำคัญของผู้เรียน 5 ด้าน
+<br>&nbsp;</p>
             <button class="btn btn-submit" data-bs-toggle="modal" data-bs-target="#modal-competency">
               <i class="bi bi-upload me-1"></i>ส่งงาน
             </button>
@@ -518,12 +597,23 @@
             </div>
 
             <div class="mb-3">
-              <label class="form-label" for="comp-files">
+              <label class="form-label" for="comp-word">
                 ไฟล์สมรรถนะ 5 ด้าน <span class="text-danger">*</span>
               </label>
-              <input type="file" class="form-control" id="comp-files"
-                     accept=".xlsx,.xls,.pdf,.docx" multiple>
-              <div class="form-text">รองรับ .xlsx, .xls, .pdf, .docx &nbsp;|&nbsp; เลือกหลายไฟล์ได้</div>
+              <input type="file" class="form-control" id="comp-word"
+                     accept=".xlsx,.xls,.docx,.doc" multiple>
+              <div class="form-text">รองรับ .xlsx, .xls, .docx, .doc &nbsp;|&nbsp; เลือกหลายไฟล์ได้</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="comp-pdf">
+                ไฟล์ PDF ฉบับสมบูรณ์ <span class="text-danger">*</span>
+              </label>
+              <input type="file" class="form-control" id="comp-pdf" accept=".pdf">
+              <div class="pdf-hint mt-2">
+                <i class="bi bi-info-circle me-1"></i>
+                อัพโหลดไฟล์ PDF ฉบับสมบูรณ์ที่มีหน้าปก ปกหลัง พร้อมปริ้น (1 ไฟล์เท่านั้น)
+              </div>
             </div>
 
             <div class="mb-1">
@@ -678,6 +768,69 @@
           <button type="button" class="btn btn-danger px-4" onclick="submitProject()">
             <i class="bi bi-send me-1"></i>ส่งงาน
           </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       MODAL 5 : สถานะการส่งงาน (Announcement)
+  ======================================================== -->
+  <div class="modal fade" id="modal-announce" tabindex="-1" aria-labelledby="lbl-announce" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="lbl-announce">
+            <i class="bi bi-megaphone-fill me-2" style="color:#f59e0b;"></i>สถานะการส่งงาน
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body p-3">
+          <!-- Loading placeholder -->
+          <div id="announce-loading" class="text-center py-4 text-muted">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            กำลังโหลดข้อมูล...
+          </div>
+
+          <!-- Tab nav (hidden until data loaded) -->
+          <div id="announce-tabs" style="display:none;">
+            <ul class="nav nav-tabs mb-3" id="announce-tab-nav" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-pp5-btn"
+                        data-bs-toggle="tab" data-bs-target="#tab-pp5"
+                        type="button" role="tab">ป.พ. 5</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-comp-btn"
+                        data-bs-toggle="tab" data-bs-target="#tab-comp"
+                        type="button" role="tab">สมรรถนะ 5 ด้าน</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-sar-btn"
+                        data-bs-toggle="tab" data-bs-target="#tab-sar"
+                        type="button" role="tab">SAR รายบุคคล</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-proj-btn"
+                        data-bs-toggle="tab" data-bs-target="#tab-proj"
+                        type="button" role="tab">รายงานโครงการ</button>
+              </li>
+            </ul>
+
+            <div class="tab-content" id="announce-tab-content">
+              <div class="tab-pane fade show active" id="tab-pp5"  role="tabpanel"><div id="status-pp5"></div></div>
+              <div class="tab-pane fade"              id="tab-comp" role="tabpanel"><div id="status-comp"></div></div>
+              <div class="tab-pane fade"              id="tab-sar"  role="tabpanel"><div id="status-sar"></div></div>
+              <div class="tab-pane fade"              id="tab-proj" role="tabpanel"><div id="status-proj"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
         </div>
 
       </div>
@@ -1016,16 +1169,19 @@
     // SUBMIT FORM 2 : สมรรถนะ 5 ด้าน
     // ============================================================
     async function submitCompetency() {
-      const name  = document.getElementById('comp-name').value.trim();
-      const files = document.getElementById('comp-files').files;
-      const note  = document.getElementById('comp-note').value.trim();
+      const name      = document.getElementById('comp-name').value.trim();
+      const wordFiles = document.getElementById('comp-word').files;
+      const pdfFiles  = document.getElementById('comp-pdf').files;
+      const note      = document.getElementById('comp-note').value.trim();
 
-      if (!name)         { showWarning('กรุณากรอกชื่อ-นามสกุล');          return; }
-      if (!files.length) { showWarning('กรุณาเลือกไฟล์สมรรถนะ 5 ด้าน'); return; }
+      if (!name)            { showWarning('กรุณากรอกชื่อ-นามสกุล');             return; }
+      if (!wordFiles.length) { showWarning('กรุณาเลือกไฟล์สมรรถนะ 5 ด้าน');   return; }
+      if (!pdfFiles.length)  { showWarning('กรุณาเลือกไฟล์ PDF ฉบับสมบูรณ์'); return; }
 
       showLoading('กำลังอัพโหลด...');
       try {
-        const fileData = await readAllFiles(files);
+        const wordData = await readAllFiles(wordFiles);
+        const pdfData  = (await readAllFiles(pdfFiles))[0]; // single file
         const newName  = isNewName(name);
 
         google.script.run
@@ -1037,7 +1193,13 @@
           .withFailureHandler(function (err) {
             showError((err && err.message) || 'ไม่สามารถส่งงานได้');
           })
-          .submitCompetency({ name: name, files: fileData, note: note, isNewName: newName });
+          .submitCompetency({
+            name      : name,
+            wordFiles : wordData,
+            pdfFile   : pdfData,
+            note      : note,
+            isNewName : newName
+          });
       } catch (e) {
         showError('ไม่สามารถอ่านไฟล์ได้: ' + e.message);
       }
@@ -1121,6 +1283,78 @@
       } catch (e) {
         showError('ไม่สามารถอ่านไฟล์ได้: ' + e.message);
       }
+    }
+
+    // ============================================================
+    // ANNOUNCEMENT — show submission status modal
+    // ============================================================
+    function showAnnouncement() {
+      // Open the modal first (shows loading state)
+      const modalEl = document.getElementById('modal-announce');
+      const modal   = bootstrap.Modal.getOrCreateInstance(modalEl);
+      document.getElementById('announce-loading').style.display = 'block';
+      document.getElementById('announce-tabs').style.display    = 'none';
+      modal.show();
+
+      // Fetch status from server
+      google.script.run
+        .withSuccessHandler(function (status) {
+          renderStatusCards('status-pp5',  status.pp5,        'ป.พ. 5');
+          renderStatusCards('status-comp', status.competency, 'สมรรถนะ 5 ด้าน');
+          renderStatusCards('status-sar',  status.sar,        'SAR รายบุคคล');
+          renderStatusCards('status-proj', status.project,    'รายงานโครงการ 2568');
+
+          document.getElementById('announce-loading').style.display = 'none';
+          document.getElementById('announce-tabs').style.display    = 'block';
+        })
+        .withFailureHandler(function (err) {
+          document.getElementById('announce-loading').innerHTML =
+            '<i class="bi bi-exclamation-triangle text-danger me-1"></i>' +
+            'ไม่สามารถโหลดข้อมูลได้: ' + ((err && err.message) || err);
+        })
+        .getSubmissionStatus();
+    }
+
+    /**
+     * Renders a LINE-message-style status card into the given container.
+     * @param {string} containerId  ID of the <div> to render into
+     * @param {Array}  list         Array of { name, submitted } from server
+     * @param {string} label        Category label for the heading
+     */
+    function renderStatusCards(containerId, list, label) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      const total  = list.length;
+      const done   = list.filter(function (x) { return x.submitted; }).length;
+      const remain = total - done;
+
+      // Build the numbered list rows
+      const rows = list.map(function (item, i) {
+        const check = item.submitted ? '✅' : '⬜';
+        return '<div class="status-item">' +
+          '<span class="status-num">' + (i + 1) + '.</span>' +
+          '<span class="status-name">' + esc(item.name) + '</span>' +
+          '<span class="status-check">' + check + '</span>' +
+        '</div>';
+      }).join('');
+
+      const allDone = remain === 0;
+      const countClass = allDone ? 'status-count done' : 'status-count';
+
+      container.innerHTML =
+        '<div class="status-card">' +
+          '<div class="status-intro">' +
+            '📢 สถานะการส่ง ' + esc(label) +
+            '<span class="' + countClass + '">' + done + '/' + total + '</span>' +
+          '</div>' +
+          rows +
+          '<div class="status-footer">' +
+            (allDone
+              ? '🎉 ส่งครบทุกคนแล้ว!'
+              : '⏳ ยังไม่ส่ง ' + remain + ' คน — กรุณาส่งด่วน!') +
+          '</div>' +
+        '</div>';
     }
   </script>
 
