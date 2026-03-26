@@ -187,7 +187,12 @@ function saveFileToDrive(folderName, fileName, base64Data, mimeType) {
     const folder  = createOrGetFolder(folderName);
     const decoded = Utilities.base64Decode(base64Data);
     const blob    = Utilities.newBlob(decoded, mimeType || 'application/octet-stream', fileName);
-    const file    = folder.createFile(blob);
+
+    // Trash any existing file with the same name so the new upload replaces it
+    const existing = folder.getFilesByName(fileName);
+    while (existing.hasNext()) { existing.next().setTrashed(true); }
+
+    const file = folder.createFile(blob);
 
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 

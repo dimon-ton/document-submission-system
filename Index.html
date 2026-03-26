@@ -318,6 +318,25 @@
       margin-left   : .4rem;
     }
     .status-count.done { background: #16a34a; }
+
+    /* ==============================
+       FILE ACCUMULATOR LIST
+    ============================== */
+    .file-acc-list { margin-top:.5rem; display:none; }
+    .file-acc-list.has-files { display:block; }
+    .file-acc-item {
+      display:flex; align-items:center; gap:.5rem;
+      padding:.25rem .55rem; background:#f0f4ff;
+      border:1px solid #c7d2fe; border-radius:6px;
+      font-size:.82rem; color:#1e293b; margin-bottom:.3rem;
+    }
+    .file-acc-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .file-acc-size { color:#6b7280; white-space:nowrap; font-size:.75rem; }
+    .file-acc-remove {
+      background:none; border:none; padding:0 2px; line-height:1;
+      font-size:.95rem; color:#dc2626; cursor:pointer; flex-shrink:0;
+    }
+    .file-acc-remove:hover { color:#991b1b; }
     .status-item.has-files { cursor: pointer; }
     .status-item.has-files:hover { background: #fef9c3; border-radius: 6px; }
     .status-chevron { font-size: .7rem; color: #92400e; margin-left: 4px; display: inline-block; transition: transform .2s; }
@@ -557,8 +576,10 @@
                 ไฟล์ Excel <span class="text-danger">*</span>
               </label>
               <input type="file" class="form-control" id="pp5-files"
-                     accept=".xlsx,.xls" multiple>
+                     accept=".xlsx,.xls" multiple
+                     onchange="accOnChange(this, _accPP5, 'pp5-file-list')">
               <div class="form-text">รองรับ .xlsx, .xls &nbsp;|&nbsp; เลือกหลายไฟล์ได้</div>
+              <div class="file-acc-list" id="pp5-file-list"></div>
             </div>
 
             <!-- หมายเหตุ -->
@@ -653,8 +674,10 @@
                 ไฟล์สมรรถนะ 5 ด้าน <span class="text-danger">*</span>
               </label>
               <input type="file" class="form-control" id="comp-word"
-                     accept=".xlsx,.xls,.docx,.doc" multiple>
+                     accept=".xlsx,.xls,.docx,.doc" multiple
+                     onchange="accOnChange(this, _accCompWord, 'comp-word-list')">
               <div class="form-text">รองรับ .xlsx, .xls, .docx, .doc &nbsp;|&nbsp; เลือกหลายไฟล์ได้</div>
+              <div class="file-acc-list" id="comp-word-list"></div>
             </div>
 
             <div class="mb-3">
@@ -758,8 +781,10 @@
                 ไฟล์ Microsoft Word <span class="text-danger">*</span>
               </label>
               <input type="file" class="form-control" id="sar-word"
-                     accept=".docx,.doc" multiple>
+                     accept=".docx,.doc" multiple
+                     onchange="accOnChange(this, _accSarWord, 'sar-word-list')">
               <div class="form-text">รองรับ .docx, .doc &nbsp;|&nbsp; เลือกหลายไฟล์ได้</div>
+              <div class="file-acc-list" id="sar-word-list"></div>
             </div>
 
             <div class="mb-3">
@@ -863,19 +888,23 @@
                 ไฟล์ Microsoft Word <span class="text-danger">*</span>
               </label>
               <input type="file" class="form-control" id="proj-word"
-                     accept=".docx,.doc" multiple>
+                     accept=".docx,.doc" multiple
+                     onchange="accOnChange(this, _accProjWord, 'proj-word-list')">
               <div class="form-text">รองรับ .docx, .doc &nbsp;|&nbsp; เลือกหลายไฟล์ได้</div>
+              <div class="file-acc-list" id="proj-word-list"></div>
             </div>
 
             <div class="mb-3">
               <label class="form-label" for="proj-pdf">
                 ไฟล์ PDF ฉบับสมบูรณ์ <span class="text-danger">*</span>
               </label>
-              <input type="file" class="form-control" id="proj-pdf" accept=".pdf" multiple>
+              <input type="file" class="form-control" id="proj-pdf" accept=".pdf" multiple
+                     onchange="accOnChange(this, _accProjPdf, 'proj-pdf-list')">
               <div class="pdf-hint mt-2">
                 <i class="bi bi-info-circle me-1"></i>
                 อัพโหลดไฟล์ PDF &nbsp;|&nbsp; เลือกหลายไฟล์ได้
               </div>
+              <div class="file-acc-list" id="proj-pdf-list"></div>
             </div>
 
             <div class="mb-1">
@@ -987,6 +1016,11 @@
     let _sarFiles      = [];
     let _projFilesOpen = false;
     let _projFiles     = [];
+    let _accPP5        = [];
+    let _accCompWord   = [];
+    let _accSarWord    = [];
+    let _accProjWord   = [];
+    let _accProjPdf    = [];
 
     // ============================================================
     // INITIALISATION
@@ -1012,7 +1046,10 @@
         el.addEventListener('hidden.bs.modal', function () {
           const f = document.getElementById(m.formId);
           if (f) f.reset();
-          if (m.id === 'modal-pp5') resetPP5FilesPanel();
+          if (m.id === 'modal-pp5')        { resetPP5FilesPanel();  clearAcc(_accPP5,      'pp5-file-list');  }
+          if (m.id === 'modal-competency') { resetCompFilesPanel(); clearAcc(_accCompWord, 'comp-word-list'); }
+          if (m.id === 'modal-sar')        { resetSarFilesPanel();  clearAcc(_accSarWord,  'sar-word-list');  }
+          if (m.id === 'modal-project')    { resetProjFilesPanel(); clearAcc(_accProjWord, 'proj-word-list'); clearAcc(_accProjPdf, 'proj-pdf-list'); }
         });
       });
     }
@@ -1172,6 +1209,60 @@
       const d = document.createElement('div');
       d.appendChild(document.createTextNode(String(str)));
       return d.innerHTML;
+    }
+
+    // ============================================================
+    // FILE ACCUMULATOR
+    // ============================================================
+    function accKey(f) { return f.name + '|' + f.size; }
+
+    function accMerge(acc, fileList) {
+      var seen = {};
+      acc.forEach(function(f) { seen[accKey(f)] = true; });
+      Array.from(fileList).forEach(function(f) {
+        if (!seen[accKey(f)]) { acc.push(f); seen[accKey(f)] = true; }
+      });
+    }
+
+    function fmtSize(b) {
+      if (b < 1024)    return b + ' B';
+      if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+      return (b / 1048576).toFixed(1) + ' MB';
+    }
+
+    function renderAccList(listId, acc) {
+      var el = document.getElementById(listId);
+      if (!el) return;
+      el.innerHTML = '';
+      if (!acc.length) { el.classList.remove('has-files'); return; }
+      el.classList.add('has-files');
+      acc.forEach(function(file, idx) {
+        var item = document.createElement('div');
+        item.className = 'file-acc-item';
+        item.innerHTML =
+          '<i class="bi bi-file-earmark me-1"></i>' +
+          '<span class="file-acc-name" title="' + esc(file.name) + '">' + esc(file.name) + '</span>' +
+          '<span class="file-acc-size">' + fmtSize(file.size) + '</span>' +
+          '<button type="button" class="file-acc-remove" title="ลบไฟล์นี้">&#x2715;</button>';
+        (function(i) {
+          item.querySelector('.file-acc-remove').addEventListener('click', function() {
+            acc.splice(i, 1);
+            renderAccList(listId, acc);
+          });
+        }(idx));
+        el.appendChild(item);
+      });
+    }
+
+    function accOnChange(inputEl, acc, listId) {
+      accMerge(acc, inputEl.files);
+      renderAccList(listId, acc);
+      inputEl.value = '';
+    }
+
+    function clearAcc(acc, listId) {
+      acc.length = 0;
+      renderAccList(listId, acc);
     }
 
     // SweetAlert2 helpers
@@ -1440,7 +1531,7 @@
     // ============================================================
     async function submitPP5() {
       const name  = document.getElementById('pp5-name').value.trim();
-      const files = document.getElementById('pp5-files').files;
+      const files = _accPP5;
       const note  = document.getElementById('pp5-note').value.trim();
 
       if (!name)           { showWarning('กรุณากรอกชื่อ-นามสกุล'); return; }
@@ -1454,6 +1545,7 @@
         google.script.run
           .withSuccessHandler(function () {
             if (newName) addNameLocally(name);
+            clearAcc(_accPP5, 'pp5-file-list');
             hideModal('modal-pp5');
             showSuccess('ส่งงานสำเร็จ!', 'บันทึกข้อมูล ป.พ.5 เรียบร้อยแล้ว');
           })
@@ -1471,7 +1563,7 @@
     // ============================================================
     async function submitCompetency() {
       const name      = document.getElementById('comp-name').value.trim();
-      const wordFiles = document.getElementById('comp-word').files;
+      const wordFiles = _accCompWord;
       const pdfFiles  = document.getElementById('comp-pdf').files;
       const note      = document.getElementById('comp-note').value.trim();
 
@@ -1488,6 +1580,7 @@
         google.script.run
           .withSuccessHandler(function () {
             if (newName) addNameLocally(name);
+            clearAcc(_accCompWord, 'comp-word-list');
             hideModal('modal-competency');
             showSuccess('ส่งงานสำเร็จ!', 'บันทึกข้อมูลสมรรถนะ 5 ด้าน เรียบร้อยแล้ว');
           })
@@ -1511,7 +1604,7 @@
     // ============================================================
     async function submitSAR() {
       const name      = document.getElementById('sar-name').value.trim();
-      const wordFiles = document.getElementById('sar-word').files;
+      const wordFiles = _accSarWord;
       const pdfFiles  = document.getElementById('sar-pdf').files;
       const note      = document.getElementById('sar-note').value.trim();
 
@@ -1528,6 +1621,7 @@
         google.script.run
           .withSuccessHandler(function () {
             if (newName) addNameLocally(name);
+            clearAcc(_accSarWord, 'sar-word-list');
             hideModal('modal-sar');
             showSuccess('ส่งงานสำเร็จ!', 'บันทึกข้อมูล SAR รายบุคคล เรียบร้อยแล้ว');
           })
@@ -1551,8 +1645,8 @@
     // ============================================================
     async function submitProject() {
       const name      = document.getElementById('proj-name').value.trim();
-      const wordFiles = document.getElementById('proj-word').files;
-      const pdfFiles  = document.getElementById('proj-pdf').files;
+      const wordFiles = _accProjWord;
+      const pdfFiles  = _accProjPdf;
       const note      = document.getElementById('proj-note').value.trim();
 
       if (!name)            { showWarning('กรุณากรอกชื่อ-นามสกุล');          return; }
@@ -1568,6 +1662,8 @@
         google.script.run
           .withSuccessHandler(function () {
             if (newName) addNameLocally(name);
+            clearAcc(_accProjWord, 'proj-word-list');
+            clearAcc(_accProjPdf,  'proj-pdf-list');
             hideModal('modal-project');
             showSuccess('ส่งงานสำเร็จ!', 'บันทึกข้อมูลรายงานโครงการ เรียบร้อยแล้ว');
           })
