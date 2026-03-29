@@ -1285,6 +1285,20 @@
     function showWarning(msg) {
       Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: msg, confirmButtonColor: '#4361ee' });
     }
+    function validateFileTypes(groups) {
+      var badFiles = [];
+      groups.forEach(function (group) {
+        Array.from(group.files).forEach(function (file) {
+          var ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+          if (group.exts.indexOf(ext) === -1) {
+            badFiles.push('"' + file.name + '" (' + group.label + ')');
+          }
+        });
+      });
+      if (badFiles.length === 0) return true;
+      showWarning('ไฟล์ที่เลือกไม่ถูกต้อง กรุณาตรวจสอบนามสกุลไฟล์:\n' + badFiles.join('\n'));
+      return false;
+    }
 
     /** Hide the Bootstrap modal by its element ID */
     function hideModal(modalId) {
@@ -1536,6 +1550,9 @@
 
       if (!name)           { showWarning('กรุณากรอกชื่อ-นามสกุล'); return; }
       if (!files.length)   { showWarning('กรุณาเลือกไฟล์ Excel');  return; }
+      if (!validateFileTypes([
+        { label: 'ไฟล์ Excel ป.พ.5', files: files, exts: ['.xlsx', '.xls'] }
+      ])) return;
 
       showLoading('กำลังอัพโหลด...');
       try {
@@ -1570,6 +1587,10 @@
       if (!name)            { showWarning('กรุณากรอกชื่อ-นามสกุล');             return; }
       if (!wordFiles.length) { showWarning('กรุณาเลือกไฟล์สมรรถนะ 5 ด้าน');   return; }
       if (!pdfFiles.length)  { showWarning('กรุณาเลือกไฟล์ PDF ฉบับสมบูรณ์'); return; }
+      if (!validateFileTypes([
+        { label: 'ไฟล์สมรรถนะ (Excel/Word)', files: wordFiles, exts: ['.xlsx', '.xls', '.docx', '.doc'] },
+        { label: 'ไฟล์ PDF ฉบับสมบูรณ์',     files: pdfFiles,  exts: ['.pdf'] }
+      ])) return;
 
       showLoading('กำลังอัพโหลด...');
       try {
@@ -1611,6 +1632,10 @@
       if (!name)           { showWarning('กรุณากรอกชื่อ-นามสกุล');             return; }
       if (!wordFiles.length){ showWarning('กรุณาเลือกไฟล์ Microsoft Word');    return; }
       if (!pdfFiles.length) { showWarning('กรุณาเลือกไฟล์ PDF ฉบับสมบูรณ์'); return; }
+      if (!validateFileTypes([
+        { label: 'ไฟล์ Microsoft Word (SAR)', files: wordFiles, exts: ['.docx', '.doc'] },
+        { label: 'ไฟล์ PDF ฉบับสมบูรณ์',      files: pdfFiles,  exts: ['.pdf'] }
+      ])) return;
 
       showLoading('กำลังอัพโหลด...');
       try {
@@ -1652,6 +1677,10 @@
       if (!name)            { showWarning('กรุณากรอกชื่อ-นามสกุล');          return; }
       if (!wordFiles.length) { showWarning('กรุณาเลือกไฟล์ Microsoft Word'); return; }
       if (!pdfFiles.length)  { showWarning('กรุณาเลือกไฟล์ PDF');            return; }
+      if (!validateFileTypes([
+        { label: 'ไฟล์ Microsoft Word (โครงการ)', files: wordFiles, exts: ['.docx', '.doc'] },
+        { label: 'ไฟล์ PDF (โครงการ)',             files: pdfFiles,  exts: ['.pdf'] }
+      ])) return;
 
       showLoading('กำลังอัพโหลด...');
       try {
