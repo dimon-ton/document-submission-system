@@ -207,6 +207,74 @@ function saveFileToDrive(folderName, fileName, base64Data, mimeType) {
 }
 
 // ============================================================
+// TELEGRAM NOTIFICATIONS
+// ============================================================
+
+/**
+ * Sends a Telegram message via Bot API.
+ * Reads TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from Script Properties.
+ * Non-fatal: logs errors but never throws (won't break form submissions).
+ * @param {string} message  HTML-formatted message text
+ */
+function sendTelegramNotification(message) {
+  try {
+    const props  = PropertiesService.getScriptProperties();
+    const token  = props.getProperty('TELEGRAM_BOT_TOKEN');
+    const chatId = props.getProperty('TELEGRAM_CHAT_ID');
+
+    if (!token || !chatId) {
+      Logger.log('Telegram: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured. Skipping.');
+      return;
+    }
+
+    const url     = 'https://api.telegram.org/bot' + token + '/sendMessage';
+    const payload = {
+      chat_id              : chatId,
+      text                 : message,
+      parse_mode           : 'HTML',
+      disable_web_page_preview: true
+    };
+
+    const response = UrlFetchApp.fetch(url, {
+      method             : 'post',
+      contentType        : 'application/json',
+      payload            : JSON.stringify(payload),
+      muteHttpExceptions : true
+    });
+
+    if (response.getResponseCode() !== 200) {
+      Logger.log('Telegram API error: ' + response.getContentText());
+    }
+  } catch (e) {
+    Logger.log('sendTelegramNotification error: ' + e);
+  }
+}
+
+/**
+ * One-time setup: saves Telegram credentials to Script Properties.
+ * Run this function ONCE from the Apps Script editor (not deployed web app).
+ *
+ * How to use:
+ *   1. Open script editor → find this function
+ *   2. Edit the values below, then click Run
+ *   3. Revert the values (do not commit credentials to source control)
+ *
+ * @param {string} token   Bot token from @BotFather  (e.g. "123456:ABC-DEF...")
+ * @param {string} chatId  Chat/channel ID             (e.g. "-1001234567890")
+ */
+function setTelegramConfig(token, chatId) {
+  // ── EDIT THESE TWO VALUES, RUN ONCE, THEN REVERT ──
+  const BOT_TOKEN = token  || 'PASTE_YOUR_BOT_TOKEN_HERE';
+  const CHAT_ID   = chatId || 'PASTE_YOUR_CHAT_ID_HERE';
+  // ──────────────────────────────────────────────────
+
+  const props = PropertiesService.getScriptProperties();
+  props.setProperty('TELEGRAM_BOT_TOKEN', BOT_TOKEN);
+  props.setProperty('TELEGRAM_CHAT_ID',   CHAT_ID);
+  Logger.log('✅ Telegram config saved. Token ends with: ...' + BOT_TOKEN.slice(-6));
+}
+
+// ============================================================
 // FORM SUBMISSIONS
 // ============================================================
 
@@ -239,6 +307,18 @@ function submitPP5(data) {
     ]);
 
     if (data.isNewName) addName(data.name);
+
+    const _ts      = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm');
+    const _files   = fileNames.map((n, i) => '  • <a href="' + fileUrls[i] + '">' + n + '</a>').join('\n');
+    const _note    = data.note ? '\n📝 <b>หมายเหตุ:</b> ' + data.note : '';
+    sendTelegramNotification(
+      '📄 <b>ส่งงาน ป.พ. 5</b>\n\n' +
+      '👤 <b>ชื่อ:</b> ' + data.name + '\n' +
+      '🕐 <b>เวลา:</b> ' + _ts + '\n' +
+      '📁 <b>ไฟล์ที่ส่ง:</b>\n' + _files +
+      _note
+    );
+
     return { success: true };
   } catch (e) {
     Logger.log('submitPP5 error: ' + e);
@@ -285,6 +365,20 @@ function submitCompetency(data) {
     ]);
 
     if (data.isNewName) addName(data.name);
+
+    const _ts    = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm');
+    const _words = fileNames.length
+      ? '\n📁 <b>ไฟล์ Word/Excel:</b>\n' + fileNames.map((n, i) => '  • <a href="' + fileUrls[i] + '">' + n + '</a>').join('\n')
+      : '';
+    const _pdf   = pdfName ? '\n📑 <b>ไฟล์ PDF:</b>\n  • <a href="' + pdfUrl + '">' + pdfName + '</a>' : '';
+    const _note  = data.note ? '\n📝 <b>หมายเหตุ:</b> ' + data.note : '';
+    sendTelegramNotification(
+      '🎯 <b>ส่งงาน สมรรถนะ 5 ด้าน</b>\n\n' +
+      '👤 <b>ชื่อ:</b> ' + data.name + '\n' +
+      '🕐 <b>เวลา:</b> ' + _ts +
+      _words + _pdf + _note
+    );
+
     return { success: true };
   } catch (e) {
     Logger.log('submitCompetency error: ' + e);
@@ -331,6 +425,20 @@ function submitSAR(data) {
     ]);
 
     if (data.isNewName) addName(data.name);
+
+    const _ts    = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm');
+    const _words = wordNames.length
+      ? '\n📁 <b>ไฟล์ Word:</b>\n' + wordNames.map((n, i) => '  • <a href="' + wordUrls[i] + '">' + n + '</a>').join('\n')
+      : '';
+    const _pdf   = pdfName ? '\n📑 <b>ไฟล์ PDF:</b>\n  • <a href="' + pdfUrl + '">' + pdfName + '</a>' : '';
+    const _note  = data.note ? '\n📝 <b>หมายเหตุ:</b> ' + data.note : '';
+    sendTelegramNotification(
+      '📊 <b>ส่งงาน SAR รายบุคคล</b>\n\n' +
+      '👤 <b>ชื่อ:</b> ' + data.name + '\n' +
+      '🕐 <b>เวลา:</b> ' + _ts +
+      _words + _pdf + _note
+    );
+
     return { success: true };
   } catch (e) {
     Logger.log('submitSAR error: ' + e);
@@ -379,6 +487,22 @@ function submitProjectReport(data) {
     ]);
 
     if (data.isNewName) addName(data.name);
+
+    const _ts    = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm');
+    const _words = wordNames.length
+      ? '\n📁 <b>ไฟล์ Word:</b>\n' + wordNames.map((n, i) => '  • <a href="' + wordUrls[i] + '">' + n + '</a>').join('\n')
+      : '';
+    const _pdfs  = pdfNames.length
+      ? '\n📑 <b>ไฟล์ PDF:</b>\n' + pdfNames.map((n, i) => '  • <a href="' + pdfUrls[i] + '">' + n + '</a>').join('\n')
+      : '';
+    const _note  = data.note ? '\n📝 <b>หมายเหตุ:</b> ' + data.note : '';
+    sendTelegramNotification(
+      '📋 <b>ส่งงาน รายงานโครงการประจำปี 2568</b>\n\n' +
+      '👤 <b>ชื่อ:</b> ' + data.name + '\n' +
+      '🕐 <b>เวลา:</b> ' + _ts +
+      _words + _pdfs + _note
+    );
+
     return { success: true };
   } catch (e) {
     Logger.log('submitProjectReport error: ' + e);
