@@ -1563,16 +1563,27 @@
       return resumableUpload(file, folderName, onProgress);
     }
 
+    /** Max files uploaded in parallel. Keeps us under Apps Script's
+     *  concurrency limit and the browser's ~6-connections-per-host cap,
+     *  while still letting users visibly see multiple bars move at once. */
+    const MAX_PARALLEL_UPLOADS = 3;
+
     /**
      * Convert all files in a FileList → array of upload descriptors.
-     * Shows a beautiful per-file progress modal with live tracking.
+     * Runs uploads in parallel (worker-pool, capped at MAX_PARALLEL_UPLOADS)
+     * so multiple progress bars visibly fill at the same time. Returned
+     * array preserves the original file order.
      */
     async function readAllFiles(fileList, folderName) {
       const files = Array.from(fileList);
-      const out   = [];
       showUploadProgress(files);
-      try {
-        for (let idx = 0; idx < files.length; idx++) {
+      const out = new Array(files.length);
+
+      let nextIdx = 0;
+      async function worker() {
+        while (true) {
+          const idx = nextIdx++;
+          if (idx >= files.length) return;
           const f = files[idx];
           setFileStatus(idx, 'active');
           try {
@@ -1582,15 +1593,18 @@
             // Ensure inline-upload files (no onProgress) hit 100%
             updateFileProgress(idx, f.size, f.size);
             setFileStatus(idx, 'done');
-            out.push(desc);
+            out[idx] = desc;
           } catch (err) {
             setFileStatus(idx, 'error');
             throw err;
           }
         }
-      } finally {
-        // Keep dialog visible — caller (submit*) will replace it with success/error
       }
+
+      const workerCount = Math.min(MAX_PARALLEL_UPLOADS, files.length);
+      const workers = [];
+      for (let i = 0; i < workerCount; i++) workers.push(worker());
+      await Promise.all(workers);
       return out;
     }
 
