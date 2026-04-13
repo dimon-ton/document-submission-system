@@ -404,6 +404,125 @@
     }
 
     /* ==============================
+       UPLOAD PROGRESS MODAL
+    ============================== */
+    .upload-progress-wrap {
+      text-align: left;
+      font-family: 'Sarabun', 'Segoe UI', sans-serif;
+    }
+    .upload-progress-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: .5rem;
+    }
+    .upload-progress-header .up-title {
+      font-size: .95rem; font-weight: 600; color: #1e293b;
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .upload-progress-header .up-count {
+      font-size: .78rem; color: #64748b; font-weight: 500;
+    }
+    .upload-progress-overall {
+      height: 10px; background: #e2e8f0; border-radius: 999px;
+      overflow: hidden; margin-bottom: .35rem;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
+    }
+    .upload-progress-overall .bar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #4361ee 0%, #7209b7 100%);
+      border-radius: 999px;
+      transition: width .25s ease;
+      position: relative; overflow: hidden;
+    }
+    .upload-progress-overall .bar::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,.35) 50%,
+        rgba(255,255,255,0) 100%
+      );
+      animation: upShine 1.4s linear infinite;
+    }
+    @keyframes upShine {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .upload-progress-stats {
+      display: flex; justify-content: space-between;
+      font-size: .74rem; color: #64748b; margin-bottom: .75rem;
+    }
+    .upload-progress-list {
+      max-height: 260px; overflow-y: auto;
+      padding-right: .3rem;
+      border-top: 1px solid #e2e8f0;
+      padding-top: .6rem;
+    }
+    .upload-progress-list::-webkit-scrollbar { width: 6px; }
+    .upload-progress-list::-webkit-scrollbar-thumb {
+      background: #cbd5e1; border-radius: 3px;
+    }
+    .up-file-row {
+      padding: .5rem .6rem; margin-bottom: .45rem;
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      border-radius: 10px; font-size: .78rem;
+      transition: background .2s, border-color .2s;
+    }
+    .up-file-row.active {
+      background: #eef2ff; border-color: #c7d2fe;
+    }
+    .up-file-row.done {
+      background: #f0fdf4; border-color: #bbf7d0;
+    }
+    .up-file-row.error {
+      background: #fef2f2; border-color: #fecaca;
+    }
+    .up-file-head {
+      display: flex; align-items: center; gap: .45rem;
+      margin-bottom: .3rem;
+    }
+    .up-file-icon {
+      font-size: 1rem; flex-shrink: 0; width: 18px; text-align: center;
+    }
+    .up-file-row.pending .up-file-icon { color: #94a3b8; }
+    .up-file-row.active  .up-file-icon { color: #4361ee; }
+    .up-file-row.done    .up-file-icon { color: #16a34a; }
+    .up-file-row.error   .up-file-icon { color: #dc2626; }
+    .up-file-name {
+      flex: 1; color: #1e293b; font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .up-file-pct {
+      font-size: .72rem; color: #64748b;
+      font-variant-numeric: tabular-nums; flex-shrink: 0;
+    }
+    .up-file-row.done .up-file-pct { color: #16a34a; font-weight: 600; }
+    .up-file-row.error .up-file-pct { color: #dc2626; font-weight: 600; }
+    .up-file-bar {
+      height: 5px; background: #e2e8f0; border-radius: 999px;
+      overflow: hidden;
+    }
+    .up-file-bar .bar {
+      height: 100%; width: 0%; border-radius: 999px;
+      background: linear-gradient(90deg, #60a5fa, #4361ee);
+      transition: width .2s ease;
+    }
+    .up-file-row.done .up-file-bar .bar {
+      background: linear-gradient(90deg, #4ade80, #16a34a);
+      width: 100% !important;
+    }
+    .up-file-row.error .up-file-bar .bar {
+      background: #dc2626;
+    }
+    .up-file-meta {
+      display: flex; justify-content: space-between;
+      font-size: .68rem; color: #94a3b8; margin-top: .2rem;
+    }
+
+    /* ==============================
        RESPONSIVE ADJUSTMENTS
     ============================== */
     @media (max-width: 576px) {
@@ -1446,27 +1565,156 @@
 
     /**
      * Convert all files in a FileList → array of upload descriptors.
-     * Shows per-file progress in the SweetAlert2 loading dialog.
+     * Shows a beautiful per-file progress modal with live tracking.
      */
     async function readAllFiles(fileList, folderName) {
       const files = Array.from(fileList);
       const out   = [];
-      for (let idx = 0; idx < files.length; idx++) {
-        const f      = files[idx];
-        const prefix = files.length > 1
-          ? 'ไฟล์ ' + (idx + 1) + '/' + files.length + ': '
-          : '';
-        updateLoading(prefix + escSimple(f.name) + '<br>เริ่มอัพโหลด...');
-        out.push(await readFileAsBase64(f, folderName, function (done, total) {
-          const pct = total > 0 ? Math.floor(100 * done / total) : 0;
-          updateLoading(
-            prefix + escSimple(f.name) + '<br>' +
-            'กำลังอัพโหลด ' + pct + '% (' +
-            fmtSize(done) + ' / ' + fmtSize(total) + ')'
-          );
-        }));
+      showUploadProgress(files);
+      try {
+        for (let idx = 0; idx < files.length; idx++) {
+          const f = files[idx];
+          setFileStatus(idx, 'active');
+          try {
+            const desc = await readFileAsBase64(f, folderName, function (done, total) {
+              updateFileProgress(idx, done, total);
+            });
+            // Ensure inline-upload files (no onProgress) hit 100%
+            updateFileProgress(idx, f.size, f.size);
+            setFileStatus(idx, 'done');
+            out.push(desc);
+          } catch (err) {
+            setFileStatus(idx, 'error');
+            throw err;
+          }
+        }
+      } finally {
+        // Keep dialog visible — caller (submit*) will replace it with success/error
       }
       return out;
+    }
+
+    // ---------- Beautiful upload progress modal ----------
+
+    const _upState = {
+      files     : [],      // [{ name, size, done, status }]
+      totalBytes: 0,
+      doneBytes : 0
+    };
+
+    /** Open a SweetAlert2 dialog with an overall + per-file progress UI. */
+    function showUploadProgress(files) {
+      _upState.files = files.map(function (f) {
+        return { name: f.name, size: f.size, done: 0, status: 'pending' };
+      });
+      _upState.totalBytes = files.reduce(function (a, f) { return a + f.size; }, 0);
+      _upState.doneBytes  = 0;
+
+      const rows = _upState.files.map(function (f, i) {
+        return (
+          '<div class="up-file-row pending" data-idx="' + i + '">' +
+            '<div class="up-file-head">' +
+              '<i class="bi bi-file-earmark up-file-icon"></i>' +
+              '<span class="up-file-name" title="' + esc(f.name) + '">' + esc(f.name) + '</span>' +
+              '<span class="up-file-pct">รอคิว</span>' +
+            '</div>' +
+            '<div class="up-file-bar"><div class="bar"></div></div>' +
+            '<div class="up-file-meta">' +
+              '<span class="up-file-sent">0 B</span>' +
+              '<span class="up-file-total">' + fmtSize(f.size) + '</span>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+
+      const html =
+        '<div class="upload-progress-wrap">' +
+          '<div class="upload-progress-header">' +
+            '<div class="up-title">' +
+              '<i class="bi bi-cloud-arrow-up-fill" style="color:#4361ee"></i>' +
+              'กำลังอัพโหลดไฟล์' +
+            '</div>' +
+            '<div class="up-count" id="upCount">0 / ' + files.length + '</div>' +
+          '</div>' +
+          '<div class="upload-progress-overall"><div class="bar" id="upOverallBar"></div></div>' +
+          '<div class="upload-progress-stats">' +
+            '<span id="upOverallPct">0%</span>' +
+            '<span id="upOverallBytes">0 B / ' + fmtSize(_upState.totalBytes) + '</span>' +
+          '</div>' +
+          '<div class="upload-progress-list">' + rows + '</div>' +
+        '</div>';
+
+      Swal.fire({
+        html              : html,
+        width             : 520,
+        showConfirmButton : false,
+        allowOutsideClick : false,
+        allowEscapeKey    : false,
+        background        : '#ffffff'
+      });
+    }
+
+    function setFileStatus(idx, status) {
+      const row = document.querySelector('.up-file-row[data-idx="' + idx + '"]');
+      if (!row) return;
+      row.classList.remove('pending', 'active', 'done', 'error');
+      row.classList.add(status);
+      const icon = row.querySelector('.up-file-icon');
+      const pct  = row.querySelector('.up-file-pct');
+      if (status === 'active') {
+        icon.className = 'bi bi-arrow-repeat up-file-icon';
+        icon.style.animation = 'spin 1s linear infinite';
+      } else if (status === 'done') {
+        icon.className = 'bi bi-check-circle-fill up-file-icon';
+        icon.style.animation = '';
+        if (pct) pct.textContent = 'เสร็จ';
+      } else if (status === 'error') {
+        icon.className = 'bi bi-x-circle-fill up-file-icon';
+        icon.style.animation = '';
+        if (pct) pct.textContent = 'ผิดพลาด';
+      } else {
+        icon.className = 'bi bi-file-earmark up-file-icon';
+        icon.style.animation = '';
+      }
+      _upState.files[idx].status = status;
+      updateOverallProgress();
+    }
+
+    function updateFileProgress(idx, done, total) {
+      const f = _upState.files[idx];
+      if (!f) return;
+      const prev = f.done;
+      f.done = Math.min(done, total);
+      _upState.doneBytes += (f.done - prev);
+
+      const row = document.querySelector('.up-file-row[data-idx="' + idx + '"]');
+      if (!row) return;
+      const pct = total > 0 ? Math.floor(100 * f.done / total) : 0;
+      const bar = row.querySelector('.up-file-bar .bar');
+      if (bar) bar.style.width = pct + '%';
+      const pctEl = row.querySelector('.up-file-pct');
+      if (pctEl && f.status !== 'done' && f.status !== 'error') {
+        pctEl.textContent = pct + '%';
+      }
+      const sentEl = row.querySelector('.up-file-sent');
+      if (sentEl) sentEl.textContent = fmtSize(f.done);
+      updateOverallProgress();
+    }
+
+    function updateOverallProgress() {
+      const total = _upState.totalBytes || 1;
+      const pct   = Math.floor(100 * _upState.doneBytes / total);
+      const bar   = document.getElementById('upOverallBar');
+      if (bar) bar.style.width = Math.min(pct, 100) + '%';
+      const pctEl = document.getElementById('upOverallPct');
+      if (pctEl) pctEl.textContent = Math.min(pct, 100) + '%';
+      const bytesEl = document.getElementById('upOverallBytes');
+      if (bytesEl) {
+        bytesEl.textContent = fmtSize(_upState.doneBytes) + ' / ' + fmtSize(_upState.totalBytes);
+      }
+      const doneCount = _upState.files.filter(function (f) { return f.status === 'done'; }).length;
+      const countEl = document.getElementById('upCount');
+      if (countEl) countEl.textContent = doneCount + ' / ' + _upState.files.length;
     }
 
     /** Quick text-only escape for progress messages (no DOM needed). */
