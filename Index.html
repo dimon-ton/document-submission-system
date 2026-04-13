@@ -1568,17 +1568,10 @@
      *  while still letting users visibly see multiple bars move at once. */
     const MAX_PARALLEL_UPLOADS = 3;
 
-    /**
-     * Convert all files in a FileList → array of upload descriptors.
-     * Runs uploads in parallel (worker-pool, capped at MAX_PARALLEL_UPLOADS)
-     * so multiple progress bars visibly fill at the same time. Returned
-     * array preserves the original file order.
-     */
-    async function readAllFiles(fileList, folderName) {
-      const files = Array.from(fileList);
-      showUploadProgress(files);
+    /** Shared worker-pool runner. Assumes showUploadProgress() was already
+     *  called with the same `files` array (so row indices line up). */
+    async function _runUploadPool(files, folderName) {
       const out = new Array(files.length);
-
       let nextIdx = 0;
       async function worker() {
         while (true) {
@@ -1590,7 +1583,6 @@
             const desc = await readFileAsBase64(f, folderName, function (done, total) {
               updateFileProgress(idx, done, total);
             });
-            // Ensure inline-upload files (no onProgress) hit 100%
             updateFileProgress(idx, f.size, f.size);
             setFileStatus(idx, 'done');
             out[idx] = desc;
@@ -1600,12 +1592,48 @@
           }
         }
       }
-
       const workerCount = Math.min(MAX_PARALLEL_UPLOADS, files.length);
       const workers = [];
       for (let i = 0; i < workerCount; i++) workers.push(worker());
       await Promise.all(workers);
       return out;
+    }
+
+    /**
+     * Single-input entry point. Opens a progress modal and uploads one
+     * FileList in parallel.
+     */
+    async function readAllFiles(fileList, folderName) {
+      const files = Array.from(fileList);
+      showUploadProgress(files);
+      return _runUploadPool(files, folderName);
+    }
+
+    /**
+     * Multi-input entry point. Accepts several FileLists (e.g. word input
+     * + pdf input from the same form), opens ONE progress modal showing
+     * every file, and uploads them ALL in parallel through a single worker
+     * pool. Returns an array of arrays, preserving the original grouping
+     * and order — so callers can still hand off word/pdf descriptors
+     * separately to the server.
+     *
+     *   const [wordData, pdfData] = await readFileGroups(
+     *     [wordFiles, pdfFiles], FOLDER_SAR
+     *   );
+     */
+    async function readFileGroups(groups, folderName) {
+      const flat   = [];
+      const slices = [];
+      groups.forEach(function (g) {
+        const arr = Array.from(g || []);
+        slices.push({ start: flat.length, length: arr.length });
+        arr.forEach(function (f) { flat.push(f); });
+      });
+      if (!flat.length) return groups.map(function () { return []; });
+
+      showUploadProgress(flat);
+      const out = await _runUploadPool(flat, folderName);
+      return slices.map(function (s) { return out.slice(s.start, s.start + s.length); });
     }
 
     // ---------- Beautiful upload progress modal ----------
@@ -2145,8 +2173,10 @@
 
       showLoading('กำลังอัพโหลด...');
       try {
-        const wordData = await readAllFiles(wordFiles, FOLDER_COMPETENCY);
-        const pdfData  = (await readAllFiles(pdfFiles, FOLDER_COMPETENCY))[0]; // single file
+        const [wordData, pdfGroup] = await readFileGroups(
+          [wordFiles, pdfFiles], FOLDER_COMPETENCY
+        );
+        const pdfData  = pdfGroup[0]; // single file
         const newName  = isNewName(name);
 
         google.script.run
@@ -2190,8 +2220,10 @@
 
       showLoading('กำลังอัพโหลด...');
       try {
-        const wordData = await readAllFiles(wordFiles, FOLDER_SAR);
-        const pdfData  = (await readAllFiles(pdfFiles, FOLDER_SAR))[0]; // single file
+        const [wordData, pdfGroup] = await readFileGroups(
+          [wordFiles, pdfFiles], FOLDER_SAR
+        );
+        const pdfData  = pdfGroup[0]; // single file
         const newName  = isNewName(name);
 
         google.script.run
@@ -2235,8 +2267,9 @@
 
       showLoading('กำลังอัพโหลด...');
       try {
-        const wordData = await readAllFiles(wordFiles, FOLDER_PROJECT);
-        const pdfData  = await readAllFiles(pdfFiles, FOLDER_PROJECT);
+        const [wordData, pdfData] = await readFileGroups(
+          [wordFiles, pdfFiles], FOLDER_PROJECT
+        );
         const newName  = isNewName(name);
 
         google.script.run
