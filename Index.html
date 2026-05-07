@@ -1864,6 +1864,33 @@
     function showWarning(msg) {
       Swal.fire({ icon: 'warning', title: 'แจ้งเตือน', text: msg, confirmButtonColor: '#4361ee' });
     }
+    function fileListHtml(files) {
+      const arr = Array.from(files || []);
+      if (!arr.length) return '—';
+      return arr.map(function (f) { return esc(f.name); }).join('<br>');
+    }
+    async function showConfirmSubmit(title, rows) {
+      const tableRows = rows.map(function (r) {
+        return '<tr>' +
+          '<td style="padding:6px 12px 6px 0;color:#6b7280;white-space:nowrap;vertical-align:top;font-weight:500;">' + esc(r.label) + ':</td>' +
+          '<td style="padding:6px 0;color:#111827;word-break:break-all;">' + r.value + '</td>' +
+          '</tr>';
+      }).join('');
+      const result = await Swal.fire({
+        icon: 'question',
+        title: title,
+        html: '<table style="width:100%;text-align:left;font-size:0.9rem;border-collapse:collapse;">' + tableRows + '</table>',
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-send-fill me-1"></i>ยืนยันการส่ง',
+        cancelButtonText: 'ยกเลิก',
+        confirmButtonColor: '#4361ee',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true,
+        focusCancel: true,
+        width: 480
+      });
+      return result.isConfirmed;
+    }
     function validateFileTypes(groups) {
       var badFiles = [];
       groups.forEach(function (group) {
@@ -2133,6 +2160,13 @@
         { label: 'ไฟล์ Excel ป.พ.5', files: files, exts: ['.xlsx', '.xls'] }
       ])) return;
 
+      const confirmed = await showConfirmSubmit('ยืนยันการส่ง ป.พ.5', [
+        { label: 'ชื่อ-นามสกุล', value: esc(name) },
+        { label: 'ไฟล์ Excel',   value: fileListHtml(files) },
+        { label: 'หมายเหตุ',      value: note ? esc(note) : '—' }
+      ]);
+      if (!confirmed) return;
+
       showLoading('กำลังอัพโหลด...');
       try {
         const fileData = await readAllFiles(files, FOLDER_PP5);
@@ -2170,6 +2204,14 @@
         { label: 'ไฟล์สมรรถนะ (Excel/Word)', files: wordFiles, exts: ['.xlsx', '.xls', '.docx', '.doc'] },
         { label: 'ไฟล์ PDF ฉบับสมบูรณ์',     files: pdfFiles,  exts: ['.pdf'] }
       ])) return;
+
+      const confirmed = await showConfirmSubmit('ยืนยันการส่ง สมรรถนะ 5 ด้าน', [
+        { label: 'ชื่อ-นามสกุล',  value: esc(name) },
+        { label: 'ไฟล์ Word',     value: fileListHtml(wordFiles) },
+        { label: 'ไฟล์ PDF รวม', value: fileListHtml(pdfFiles) },
+        { label: 'หมายเหตุ',       value: note ? esc(note) : '—' }
+      ]);
+      if (!confirmed) return;
 
       showLoading('กำลังอัพโหลด...');
       try {
@@ -2218,6 +2260,14 @@
         { label: 'ไฟล์ PDF ฉบับสมบูรณ์',      files: pdfFiles,  exts: ['.pdf'] }
       ])) return;
 
+      const confirmed = await showConfirmSubmit('ยืนยันการส่ง SAR รายบุคคล', [
+        { label: 'ชื่อ-นามสกุล',  value: esc(name) },
+        { label: 'ไฟล์ Word',     value: fileListHtml(wordFiles) },
+        { label: 'ไฟล์ PDF รวม', value: fileListHtml(pdfFiles) },
+        { label: 'หมายเหตุ',       value: note ? esc(note) : '—' }
+      ]);
+      if (!confirmed) return;
+
       showLoading('กำลังอัพโหลด...');
       try {
         const [wordData, pdfGroup] = await readFileGroups(
@@ -2264,6 +2314,14 @@
         { label: 'ไฟล์ Microsoft Word (โครงการ)', files: wordFiles, exts: ['.docx', '.doc'] },
         { label: 'ไฟล์ PDF (โครงการ)',             files: pdfFiles,  exts: ['.pdf'] }
       ])) return;
+
+      const confirmed = await showConfirmSubmit('ยืนยันการส่ง รายงานโครงการประจำปี', [
+        { label: 'ชื่อ-นามสกุล', value: esc(name) },
+        { label: 'ไฟล์ Word',    value: fileListHtml(wordFiles) },
+        { label: 'ไฟล์ PDF',     value: fileListHtml(pdfFiles) },
+        { label: 'หมายเหตุ',      value: note ? esc(note) : '—' }
+      ]);
+      if (!confirmed) return;
 
       showLoading('กำลังอัพโหลด...');
       try {
@@ -2349,6 +2407,14 @@
         showWarning('กรุณาอธิบายปัญหาที่พบ');
         return;
       }
+
+      const descPreview = description.length > 100 ? esc(description.slice(0, 100)) + '…' : esc(description);
+      const confirmed = await showConfirmSubmit('ยืนยันการส่งรายงานปัญหา', [
+        { label: 'ผู้แจ้ง',         value: reporter ? esc(reporter) : '(ไม่ระบุชื่อ)' },
+        { label: 'รายละเอียดปัญหา', value: descPreview },
+        { label: 'ภาพแนบ',          value: _bugImages.length ? fileListHtml(_bugImages) : '—' }
+      ]);
+      if (!confirmed) return;
 
       showLoading('กำลังส่งรายงาน...');
       try {
