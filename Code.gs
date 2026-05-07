@@ -681,7 +681,7 @@ function submitCompetency(data) {
 
     let pdfName = '';
     let pdfUrl  = '';
-    if (data.pdfFile && (data.pdfFile.base64 || data.pdfFile.uploadId)) {
+    if (data.pdfFile && (data.pdfFile.base64 || data.pdfFile.uploadId || data.pdfFile.fileId)) {
       const result = persistSubmissionFile(FOLDER_COMPETENCY, data.pdfFile);
       pdfName = result.name;
       pdfUrl  = result.url;
@@ -741,7 +741,7 @@ function submitSAR(data) {
 
     let pdfName = '';
     let pdfUrl  = '';
-    if (data.pdfFile && (data.pdfFile.base64 || data.pdfFile.uploadId)) {
+    if (data.pdfFile && (data.pdfFile.base64 || data.pdfFile.uploadId || data.pdfFile.fileId)) {
       const result = persistSubmissionFile(FOLDER_SAR, data.pdfFile);
       pdfName = result.name;
       pdfUrl  = result.url;
